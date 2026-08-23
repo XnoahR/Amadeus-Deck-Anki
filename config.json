@@ -1,0 +1,188 @@
+{
+  "theme": "vhs",
+  "daily_target": 100,
+  "effects": true,
+  "chatter_seconds": 40,
+  "panel_width": 250,
+  "show_on_deck_list": true,
+  "panel_height": 430,
+  "theme_deck_list": true,
+  "deck_max_height": 430,
+  "theme_bars": true,
+  "hide_bottom_bar": false,
+  "deck_scroll": true,
+  "show_stats": true,
+  "show_history": true,
+  "show_note": true,
+  "right_width": 230,
+  "history_days": 14,
+  "show_in_reviewer": true,
+  "reviewer_size": 190,
+  "reviewer_corner": "bottom-right",
+  "reviewer_hide_seconds": 5,
+  "reviewer_always_visible": true,
+  "lines": {
+    "reminder": [
+      "Kamu belum review hari ini. {due} kartu menumpuk.",
+      "{due} kartu masih menunggu. Aku catat lho.",
+      "Mau mulai, atau mau kutagih terus?"
+    ],
+    "behind": [
+      "Sisa {due}. Baru {done} dari {target}.",
+      "Setengah jalan pun belum. Ayo.",
+      "{done} dari {target}. Jangan berhenti di sini."
+    ],
+    "close": [
+      "Tinggal sedikit lagi. {done} dari {target}.",
+      "Hampir. Selesaikan sekalian."
+    ],
+    "target": [
+      "Target {target} tercapai. ...Kerja bagus.",
+      "Sudah {done}? Kamu serius rupanya.",
+      "B-bukan berarti aku terkesan, ya."
+    ],
+    "clear": [
+      "Semua deck kosong. Puas?",
+      "Tidak ada yang tersisa. Istirahatlah.",
+      "Hari ini bersih. Bagus."
+    ],
+    "broken": [
+      "Streak-mu putus. Mulai lagi dari satu.",
+      "Kemarin kamu tidak datang.",
+      "Ya sudah. Yang penting hari ini."
+    ],
+    "poke": [
+      "Apa? Aku sedang menghitung.",
+      "Jangan dicolek terus.",
+      "...kenapa? Ada yang mau ditanya?",
+      "Kerjakan kartunya, bukan aku.",
+      "Hmph. Kamu bosan, ya?"
+    ],
+    "chatter": [
+      "Sisa {due}. Aku tunggu.",
+      "Kalau capek, berhenti sebentar tidak apa-apa.",
+      "Menunda cuma menumpuk besok.",
+      "Target hari ini {target}. Masih jauh?",
+      "Jangan lupa minum."
+    ]
+  },
+  "moods": {
+    "reminder": [
+      "sided_worried",
+      "annoyed"
+    ],
+    "behind": [
+      "normal",
+      "indifferent",
+      "side"
+    ],
+    "close": [
+      "sided_thinking",
+      "normal"
+    ],
+    "target": [
+      "blush",
+      "happy",
+      "sided_surprised"
+    ],
+    "clear": [
+      "blush",
+      "sided_pleasant"
+    ],
+    "broken": [
+      "sad",
+      "disappointed"
+    ],
+    "poke": [
+      "sided_surprised",
+      "blush",
+      "annoyed",
+      "sided_blush"
+    ],
+    "chatter": [
+      "normal",
+      "indifferent",
+      "sided_thinking",
+      "eyes_closed",
+      "side"
+    ]
+  },
+  "reviewer_lines": {
+    "good": [
+      "Bagus.",
+      "Itu baru benar.",
+      "Hm. Bisa juga kamu.",
+      "Tepat."
+    ],
+    "easy": [
+      "Kelewat gampang, ya?",
+      "Oke, aku naikkan standarnya.",
+      "Kalau semua semudah itu kita sudah selesai."
+    ],
+    "hard": [
+      "Susah? Tidak apa-apa.",
+      "Pelan saja, yang penting benar.",
+      "Kartu itu memang menyebalkan."
+    ],
+    "wrong": [
+      "Salah. Ingat baik-baik.",
+      "Hmph. Ulangi.",
+      "Tidak apa-apa. Sekali lagi."
+    ],
+    "annoyed": [
+      "Tiga kali berturut-turut. Fokus tidak?",
+      "Serius, kartu ini lagi?",
+      "Coba pelankan."
+    ],
+    "pissed": [
+      "Lima kali! Istirahat dulu sana.",
+      "Kamu asal tekan, ya?",
+      "Cukup. Tarik napas."
+    ],
+    "poke": [
+      "Apa? Aku sedang menghitung.",
+      "Jangan dicolek terus.",
+      "Kerjakan kartunya, bukan aku."
+    ],
+    "idle": [
+      ""
+    ]
+  },
+  "reviewer_moods": {
+    "good": [
+      "happy",
+      "winking"
+    ],
+    "easy": [
+      "sided_pleasant",
+      "winking",
+      "happy"
+    ],
+    "hard": [
+      "sided_thinking",
+      "normal"
+    ],
+    "wrong": [
+      "disappointed",
+      "sad"
+    ],
+    "annoyed": [
+      "annoyed"
+    ],
+    "pissed": [
+      "pissed",
+      "angry",
+      "sided_angry"
+    ],
+    "poke": [
+      "sided_surprised",
+      "blush",
+      "annoyed"
+    ],
+    "idle": [
+      "normal",
+      "indifferent",
+      "sided_thinking"
+    ]
+  }
+}

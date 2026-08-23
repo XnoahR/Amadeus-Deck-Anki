@@ -1,0 +1,13 @@
+# Character art is never shipped: the images people use are usually someone
+# else's copyrighted work, and this way everyone brings their own.
+character/*
+!character/README.txt
+
+# Anki writes the user's own config overrides here
+meta.json
+
+# personal daily notes
+notes.json
+
+__pycache__/
+*.pyc
