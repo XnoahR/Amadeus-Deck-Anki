@@ -131,7 +131,14 @@ Config.
 
 ## Cara pasang
 
-Salin foldernya ke direktori addon Anki, lalu restart Anki:
+**Cara gampang.** Unduh
+[`AmadeusDeck.ankiaddon`](https://github.com/XnoahR/Amadeus-Deck-Anki/releases/latest/download/AmadeusDeck.ankiaddon)
+lalu klik dua kali, atau lewat Anki: **Tools → Add-ons → Install from file**.
+
+Setelah itu taruh gambarmu: **Tools → Add-ons → Amadeus Deck → View Files**,
+masukkan ke folder `character/`, lalu restart Anki.
+
+**Dari source.** Kalau mau menyalin foldernya sendiri ke direktori addon Anki:
 
 ```
 ~/.local/share/Anki2/addons21/amadeus_deck              # Linux

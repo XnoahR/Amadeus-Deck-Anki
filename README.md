@@ -112,7 +112,14 @@ Notable options: `theme`, `daily_target`, `effects`, `panel_width`,
 
 ## Install
 
-Copy the folder into your Anki add-ons directory and restart Anki:
+**The easy way.** Download
+[`AmadeusDeck.ankiaddon`](https://github.com/XnoahR/Amadeus-Deck-Anki/releases/latest/download/AmadeusDeck.ankiaddon)
+and double-click it, or in Anki: **Tools → Add-ons → Install from file**.
+
+Then add your images: **Tools → Add-ons → Amadeus Deck → View Files**, drop them
+in `character/`, and restart Anki.
+
+**From source.** Copy the folder into your Anki add-ons directory instead:
 
 ```
 ~/.local/share/Anki2/addons21/amadeus_deck              # Linux
