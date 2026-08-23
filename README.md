@@ -1,5 +1,7 @@
 # Amadeus Deck
 
+[Bahasa Indonesia](README-id.md)
+
 An Anki add-on that puts a character on your deck screen and beside your reviews.
 She reacts to how the session is going: pleased when you answer well, visibly
 irritated when you press Again five times in a row, disappointed when a streak
