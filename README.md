@@ -84,6 +84,11 @@ off.
 
 ---
 
+**Lines type themselves out** a character at a time, with an 8-bit talking
+blip per syllable -- synthesised, so there is no audio file to ship. Click
+mid-sentence to finish the line. Turn either off with `typewriter` and
+`dialog_sound` in the config.
+
 ## Configuration
 
 Everything is in **Tools → Add-ons → Amadeus Deck → Config**. The whole dialogue

@@ -14,7 +14,7 @@ import re
 
 from aqt import gui_hooks, mw
 
-from . import voice
+from . import updates, voice
 from aqt.deckbrowser import DeckBrowserContent
 
 ADDON = os.path.basename(os.path.dirname(__file__))
@@ -811,6 +811,9 @@ def on_webview_content(web_content, context) -> None:
         web_content.head += "<style>%s</style>" % BAR_CSS[key]
 
 
+gui_hooks.main_window_did_init.append(
+    lambda: mw.progress.single_shot(
+        8000, lambda: updates.check(mw.addonManager.getConfig(ADDON) or {}), True))
 gui_hooks.deck_browser_will_render_content.append(on_deck_browser)
 gui_hooks.webview_will_set_content.append(on_webview_content)
 

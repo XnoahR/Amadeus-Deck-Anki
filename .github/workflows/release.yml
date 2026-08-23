@@ -1,0 +1,53 @@
+name: Package the add-on
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check every module imports
+        # A syntax error here would ship an add-on Anki refuses to load, and the
+        # zip would look perfectly fine.
+        run: python3 -m compileall -q __init__.py reviewer.py voice.py updates.py check_character.py
+
+      - name: Check the version is consistent
+        # The manifest is what Anki shows; updates.py is what decides whether to
+        # tell anyone. If they disagree the add-on nags about a release it is.
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          man=$(python3 -c "import json;print(json.load(open('manifest.json'))['human_version'])")
+          ver=$(python3 -c "import re;print(re.search(r'VERSION = \"([^\"]+)\"',open('updates.py').read()).group(1))")
+          echo "tag=$tag manifest=$man updates.py=$ver"
+          [ "$tag" = "$man" ] && [ "$tag" = "$ver" ] || { echo "versi tidak cocok"; exit 1; }
+
+      - name: Build AmadeusDeck.ankiaddon
+        # An .ankiaddon is a plain zip with __init__.py at the root. The
+        # character art is deliberately left out: it is megabytes of images and
+        # people bring their own.
+        run: |
+          mkdir -p dist
+          zip -q -r dist/AmadeusDeck.ankiaddon \
+            __init__.py reviewer.py voice.py updates.py check_character.py \
+            config.json config.md manifest.json LICENSE character/README.txt
+          unzip -l dist/AmadeusDeck.ankiaddon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AmadeusDeck
+          path: dist/AmadeusDeck.ankiaddon
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/AmadeusDeck.ankiaddon
+          generate_release_notes: true

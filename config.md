@@ -99,3 +99,6 @@ tiap huruf berbunyi, tapi di kalimat panjang itu berubah jadi dengungan.
 Bunyinya baru terdengar setelah kamu mengklik sesuatu di jendela itu. Bukan bug
 — browser memang menahan audio sampai ada interaksi, dan Anki memakai browser
 di dalamnya.
+
+**`check_updates`** — cek sekali sehari apakah ada versi baru di GitHub.
+Matikan kalau tidak mau add-on ini menghubungi internet sama sekali.

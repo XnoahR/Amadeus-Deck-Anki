@@ -189,5 +189,6 @@
       "indifferent",
       "sided_thinking"
     ]
-  }
+  },
+  "check_updates": true
 }
