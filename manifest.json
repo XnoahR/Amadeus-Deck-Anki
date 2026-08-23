@@ -1,9 +1,9 @@
 {
   "package": "amadeus_deck",
   "name": "Amadeus Deck",
-  "ankiweb_id": null,
   "author": "Philia Space",
-  "homepage": "",
+  "homepage": "https://github.com/XnoahR/Amadeus-Deck-Anki",
   "conflicts": [],
-  "mod": 0
+  "mod": 0,
+  "human_version": "1.0.0"
 }
