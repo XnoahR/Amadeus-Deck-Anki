@@ -7,6 +7,10 @@ breaks.
 
 Inspired by Project Amadeus from Steins;Gate 0.
 
+![Amadeus Deck on the deck screen](docs/screenshot.png)
+
+*The character shown is not included — see [Bring your own character](#bring-your-own-character).*
+
 **Your note types are never touched.** No template is edited, nothing is added to
 your cards, and the reviewer portrait lives in a Shadow DOM so your card CSS and
 the add-on cannot reach each other. Remove the add-on and your collection is
