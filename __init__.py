@@ -13,6 +13,8 @@ import random
 import re
 
 from aqt import gui_hooks, mw
+
+from . import voice
 from aqt.deckbrowser import DeckBrowserContent
 
 ADDON = os.path.basename(os.path.dirname(__file__))
@@ -471,6 +473,7 @@ def build_html():
         "moodFor": MOODS_(),
         "lines": {k: [_safe_fmt(t, s) for t in v] for k, v in LINES_().items()},
         "chatter": int(c.get("chatter_seconds") or 40),
+        "voice": voice.settings(c),
     }), quote=True)
 
     css = """
@@ -615,6 +618,7 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
 {right}
 
 <script>
+/*__AMD_VOICE__*/
 (function(){{
   // Anki emits the deck table bare; a table cannot scroll on its own without
   // losing its column widths, so wrap it and scroll the wrapper instead.
@@ -657,6 +661,7 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
   var say=document.getElementById("amd-say");
   var imgs=panel.querySelectorAll(".amd-img");
   var timer=null,chat=null;
+  var VOICE=amdVoice(D.voice||{{}});
 
   function pick(a){{return a[(Math.random()*a.length)|0]}}
   function picFor(mood){{
@@ -672,7 +677,7 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
     var src=picFor(mood);
     if(src)for(var i=0;i<imgs.length;i++)imgs[i].src=src;
     var pool=(D.lines&&D.lines[mood])||[];
-    if(pool.length)say.textContent=pick(pool);
+    if(pool.length)VOICE.say(say,pick(pool));
     panel.classList.remove("amd-jolt");void panel.offsetWidth;
     panel.classList.add("amd-jolt");
   }}
@@ -681,6 +686,9 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
     timer=setTimeout(function(){{show("chatter")}},ms||4500);
   }}
   panel.addEventListener("click",function(){{
+    VOICE.wake();
+    // mid-sentence, a click finishes the line instead of discarding it
+    if(VOICE.skip())return;
     show("poke");settle(4000);restart();
   }});
   function restart(){{
@@ -752,7 +760,8 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
                           right=right,
                           portrait=portrait, body=body,
                           line=_html.escape(pick_line(s["mood"], s)),
-                          stamp="&#9673; %d/%d" % (s["done"], s["target"])))
+                          stamp="&#9673; %d/%d" % (s["done"], s["target"]))
+            .replace("/*__AMD_VOICE__*/", voice.JS))
 
 
 _pending_css = ""

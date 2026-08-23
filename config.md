@@ -75,3 +75,27 @@ folder `character/`.
 
 Kalau satu state kamu hapus dari config, yang bawaan dipakai lagi. Jadi kamu
 bisa mengubah satu saja tanpa menyalin semuanya.
+
+### Suara dan cara dialognya muncul
+
+**`typewriter`** — kalimatnya diketik huruf per huruf, bukan muncul sekaligus.
+Klik di tengah kalimat untuk langsung menyelesaikannya (bukan mengganti
+kalimatnya).
+
+**`typewriter_speed`** — milidetik per huruf. Kecil = cepat. Bawaan `32`.
+
+**`dialog_sound`** — bunyi bicara 8-bit tiap suku kata. Suaranya dibangkitkan
+sendiri, tidak ada berkas audio yang perlu diunduh.
+
+**`dialog_volume`** — `0` sampai `1`. Bawaan `0.16`; ini efek latar, bukan
+musik, jadi jangan besar-besar.
+
+**`dialog_pitch`** — nada dasar dalam Hz. Bawaan `440`. Naikkan untuk suara
+yang lebih tinggi/imut, turunkan untuk yang lebih berat.
+
+**`dialog_every`** — bunyi setiap berapa huruf. Bawaan `3`. Isi `1` kalau mau
+tiap huruf berbunyi, tapi di kalimat panjang itu berubah jadi dengungan.
+
+Bunyinya baru terdengar setelah kamu mengklik sesuatu di jendela itu. Bukan bug
+— browser memang menahan audio sampai ada interaksi, dan Anki memakai browser
+di dalamnya.

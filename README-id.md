@@ -85,6 +85,12 @@ noise yang bisa dimatikan.
 
 ---
 
+
+**Dialognya diketik huruf per huruf** dengan bunyi bicara 8-bit tiap suku
+kata — bunyinya dibangkitkan sendiri, tidak ada berkas audio yang diunduh.
+Klik di tengah kalimat untuk langsung menyelesaikannya. Matikan lewat
+`typewriter` dan `dialog_sound` di config.
+
 ## Pengaturan
 
 Semua ada di **Tools → Add-ons → Amadeus Deck → Config**. Seluruh dialognya juga

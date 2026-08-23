@@ -9,6 +9,8 @@ disturb your cards. Remove the add-on and your notes are exactly as they were.
 
 import json
 
+from . import voice
+
 from aqt import gui_hooks, mw
 
 DEFAULT_REV_LINES = {
@@ -70,10 +72,12 @@ def _payload(addon, pics):
         "always": bool(c.get("reviewer_always_visible", True)),
         "theme": "holo" if c.get("theme") == "holo" else "vhs",
         "effects": bool(c.get("effects", True)),
+        "voice": voice.settings(c),
     })
 
 
 SCRIPT = r"""
+__VOICE__
 (function(){
   if (window.__amdRev) return;
   var D = __PAYLOAD__;
@@ -177,6 +181,7 @@ SCRIPT = r"""
   var imgs = root.querySelectorAll("img");
   var say = root.querySelector(".say");
   var timer = null;
+  var VOICE = amdVoice(D.voice || {});
 
   function pick(a){ return a[(Math.random() * a.length) | 0]; }
 
@@ -202,8 +207,8 @@ SCRIPT = r"""
     if (src) { for (var i = 0; i < imgs.length; i++) imgs[i].src = src; }
     var pool = D.lines[mood];
     var text = pool ? pick(pool) : "";
-    say.textContent = text;
     say.style.display = text ? "block" : "none";
+    VOICE.say(say, text);
     host.style.opacity = "1";
     if (fx && !quiet){
       wrap.classList.remove("jolt"); void wrap.offsetWidth; wrap.classList.add("jolt");
@@ -213,7 +218,12 @@ SCRIPT = r"""
     if (!quiet) timer = setTimeout(settle, D.hide * 1000);
   };
 
-  wrap.addEventListener("click", function(){ window.amdReact("poke"); });
+  wrap.addEventListener("click", function(){
+    VOICE.wake();
+    // mid-sentence, a click finishes the line instead of discarding it
+    if (VOICE.skip()) return;
+    window.amdReact("poke");
+  });
 
   if (D.always) window.amdReact("idle", true);
 })();
@@ -235,7 +245,7 @@ def on_webview_content(web_content, context):
     if not pics:
         return
     web_content.body += "<script>%s</script>" % SCRIPT.replace(
-        "__PAYLOAD__", _payload(package, pics))
+        "__PAYLOAD__", _payload(package, pics)).replace("__VOICE__", voice.JS)
 
 
 def on_answer(reviewer, card, ease):
