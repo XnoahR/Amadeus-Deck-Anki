@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Talking to her.
 
 The panel is a web view rather than plain Qt widgets, which is the whole reason

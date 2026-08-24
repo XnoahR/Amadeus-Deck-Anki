@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Config for the chat: who she is, which model answers, what she is told.
 
 Provider normalisation and key lookup are adapted from XnoahR/ayumi-assistant --

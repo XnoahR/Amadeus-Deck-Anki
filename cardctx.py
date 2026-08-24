@@ -1,7 +1,8 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-# Moved here from XnoahR/ayumi-assistant rather than rewritten: this is the
-# expensive part of talking to a model -- streaming, six provider shapes, and
-# error messages a person can act on -- and it was already working there.
+# SPDX-License-Identifier: MIT
+# Moved here from XnoahR/ayumi-assistant, which is AGPL; relicensed to MIT
+# by its author for this add-on. Moved rather than rewritten because this is
+# the expensive part of talking to a model -- streaming, six provider shapes,
+# and error messages a person can act on -- and it already worked there.
 """Pulling the word and card context out of the current reviewer state."""
 
 from __future__ import annotations

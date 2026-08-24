@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """A form for the settings people actually change.
 
 config.json holds fifty-odd keys and stays the place for everything: the
