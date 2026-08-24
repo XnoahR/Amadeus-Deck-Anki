@@ -554,10 +554,19 @@ def open_guide():
     if not os.path.exists(GUIDE):
         showInfo("Panduannya tidak ketemu di:\n%s" % GUIDE)
         return
-    # No query string on the URL. A file:// handler is free to read the whole
-    # thing as a filename, and "apikey.html?v=123" is not a file that exists --
-    # which opens nothing at all, silently. Staleness is dealt with in the page
-    # itself instead.
+    # Anki's own media server, not a file:// path. Inside a Flatpak the browser
+    # is handed the file through the document portal, which exports that single
+    # file and nothing beside it -- the guide's images are not in the exported
+    # directory and never load. Over http the whole folder is reachable, and
+    # there is no cached copy of a previous version to fight either.
+    try:
+        port = mw.mediaServer.getPort()
+    except Exception:
+        port = 0
+    if port:
+        QDesktopServices.openUrl(QUrl(
+            "http://127.0.0.1:%d/_addons/%s/guide/apikey.html" % (port, PACKAGE)))
+        return
     QDesktopServices.openUrl(QUrl.fromLocalFile(GUIDE))
 
 

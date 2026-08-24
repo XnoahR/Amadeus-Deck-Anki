@@ -23,7 +23,12 @@ HERE = os.path.dirname(__file__)
 CHARDIR = os.path.join(HERE, "character")
 
 # Anki serves addon files under /_addons/<package>/... once they are exported.
-mw.addonManager.setWebExports(__name__, r"character/.*\.(png|jpg|jpeg|webp|gif)")
+# The guide is served over Anki's own media server rather than opened as a file:
+# inside a Flatpak, handing a file:// path to the browser goes through the
+# document portal, which exports exactly one file into a temporary directory --
+# so the guide's images are simply not there and can never load.
+mw.addonManager.setWebExports(
+    __name__, r"(character/.*\.(png|jpg|jpeg|webp|gif)|guide/.*\.(html|png|css|js))")
 
 MOODS = [
     "normal", "happy", "winking", "sided_pleasant", "sided_thinking",
