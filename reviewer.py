@@ -10,7 +10,7 @@ disturb your cards. Remove the add-on and your notes are exactly as they were.
 import json
 import random
 
-from . import voice
+from . import grain, voice
 from . import theme as theme_mod
 
 from aqt import gui_hooks, mw
@@ -83,6 +83,7 @@ def _payload(addon, pics):
         "always": bool(c.get("reviewer_always_visible", True)),
         "pal": theme_mod.palette(theme_mod.name_of(c)),
         "rot": theme_mod.rotations(theme_mod.name_of(c)),
+        "grain": grain.settings(c),
         "effects": bool(c.get("effects", True)),
         "hidden": _chat_open(),
         "voice": voice.settings(c),
@@ -91,6 +92,7 @@ def _payload(addon, pics):
 
 SCRIPT = r"""
 __VOICE__
+__GRAIN__
 (function(){
   if (window.__amdRev) return;
   var D = __PAYLOAD__;
@@ -129,20 +131,6 @@ __VOICE__
 
   // A noise tile made once and repeated. Shipping a PNG would mean another
   // file to load through the add-on's web exports for no benefit.
-  var noiseUrl = "";
-  if (fx) {
-    var N = 64, cv = document.createElement("canvas");
-    cv.width = cv.height = N;
-    var cx = cv.getContext("2d"), id = cx.createImageData(N, N);
-    for (var i = 0; i < id.data.length; i += 4) {
-      var v = (Math.random() * 255) | 0;
-      id.data[i] = id.data[i+1] = id.data[i+2] = v;
-      id.data[i+3] = 255;
-    }
-    cx.putImageData(id, 0, 0);
-    noiseUrl = cv.toDataURL("image/png");
-  }
-
   root.innerHTML =
     "<style>" +
     ":host{all:initial}" +
@@ -177,12 +165,7 @@ __VOICE__
       "82%,100%{transform:translateX(-50%);opacity:0}}" +
     ".scan{position:absolute;inset:0;pointer-events:none;background:" +
       "repeating-linear-gradient(180deg,rgba(0,0,0,.34) 0 1px,transparent 1px 3px)}" +
-    ".noise{position:absolute;inset:0;pointer-events:none;opacity:.16;" +
-      "mix-blend-mode:overlay;background-repeat:repeat;" +
-      (noiseUrl ? "background-image:url(" + noiseUrl + ");" : "") +
-      (fx ? "animation:cr .6s steps(3) infinite" : "") + "}" +
-    "@keyframes cr{0%{background-position:0 0}33%{background-position:-14px 9px}" +
-      "66%{background-position:11px -7px}100%{background-position:0 0}}" +
+    ".noise{position:absolute;inset:0;pointer-events:none;background-repeat:repeat}" +
     ".track{position:absolute;left:0;right:0;height:40px;pointer-events:none;" +
       "background:linear-gradient(180deg,transparent,rgba(255,255,255,.10) 45%,transparent);" +
       (fx ? "animation:ro 5.5s linear infinite" : "display:none") + "}" +
@@ -204,6 +187,7 @@ __VOICE__
   var wrap = root.querySelector(".w");
   var imgs = root.querySelectorAll("img");
   var say = root.querySelector(".say");
+  amdGrain(root.querySelector(".noise"), D.grain);
   var timer = null;
 
   function pick(a){ return a[(Math.random() * a.length) | 0]; }
@@ -274,7 +258,8 @@ def on_webview_content(web_content, context):
     if not pics:
         return
     web_content.body += "<script>%s</script>" % SCRIPT.replace(
-        "__PAYLOAD__", _payload(package, pics)).replace("__VOICE__", voice.JS)
+        "__PAYLOAD__", _payload(package, pics)
+    ).replace("__VOICE__", voice.JS).replace("__GRAIN__", grain.JS)
 
 
 def on_answer(reviewer, card, ease):

@@ -14,7 +14,7 @@ import re
 
 from aqt import gui_hooks, mw
 
-from . import chat, settings, updates, voice
+from . import chat, grain, settings, updates, voice
 from . import theme as theme_mod
 from aqt.deckbrowser import DeckBrowserContent
 
@@ -388,6 +388,7 @@ def build_html():
         "lines": {k: [_safe_fmt(t, s) for t in v] for k, v in LINES_().items()},
         "chatter": int(c.get("chatter_seconds") or 40),
         "voice": voice.settings(c),
+        "grain": grain.settings(c),
     }), quote=True)
 
     css = """
@@ -438,10 +439,9 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
   max-width:none !important;transform:translateX(-50%);pointer-events:none}}
 .amd-scan,.amd-noise,.amd-track{{position:absolute;inset:0;pointer-events:none}}
 .amd-scan{{background:repeating-linear-gradient(180deg,rgba(0,0,0,.34) 0 1px,transparent 1px 3px)}}
-.amd-noise{{opacity:.15;mix-blend-mode:overlay;background-repeat:repeat;
-  animation:amdCrawl .6s steps(3) infinite}}
-@keyframes amdCrawl{{0%{{background-position:0 0}}33%{{background-position:-14px 9px}}
-  66%{{background-position:11px -7px}}100%{{background-position:0 0}}}}
+/* opacity and the tiles come from grain.py at build time; overlay on a
+   near-black panel was invisible, and this layer never had an image at all */
+.amd-noise{{background-repeat:repeat}}
 .amd-track{{height:44px;inset:auto 0 auto 0;
   background:linear-gradient(180deg,transparent,rgba(255,255,255,.10) 45%,transparent);
   animation:amdRoll 5.5s linear infinite}}
@@ -491,6 +491,7 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
 
 <script>
 /*__AMD_VOICE__*/
+/*__AMD_GRAIN__*/
 (function(){{
   // Anki emits the deck table bare; a table cannot scroll on its own without
   // losing its column widths, so wrap it and scroll the wrapper instead.
@@ -548,6 +549,7 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
   var MOUTH=amdMouth(function(src){{
     for(var i=0;i<imgs.length;i++)imgs[i].src=src;
   }},framesFor,D.voice&&D.voice.mouthMs);
+  amdGrain(panel.querySelector(".amd-noise"),D.grain);
   var VOICE=amdVoice(D.voice||{{}},(D.voice&&D.voice.mouth)?MOUTH:{{}});
   function show(mood){{
     MOUTH.set(mood);
@@ -640,7 +642,8 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
                           portrait=portrait, body=body,
                           line=_html.escape(pick_line(s["mood"], s)),
                           stamp="&#9673; %d/%d" % (s["done"], s["target"]))
-            .replace("/*__AMD_VOICE__*/", voice.JS))
+            .replace("/*__AMD_VOICE__*/", voice.JS)
+            .replace("/*__AMD_GRAIN__*/", grain.JS))
 
 
 _pending_css = ""

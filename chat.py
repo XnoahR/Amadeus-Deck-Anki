@@ -27,7 +27,7 @@ from aqt.qt import (
 from aqt.utils import showWarning, tooltip
 from aqt.webview import AnkiWebView
 
-from . import cardctx, chatconf, providers, voice
+from . import cardctx, chatconf, grain, providers, voice
 from . import theme as theme_mod
 
 DOCK_NAME = "amadeusChatDock"
@@ -316,7 +316,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 /* Grain belongs to the picture, not to the page. Over the message log it is
    just something between you and the words you are reading. */
 #amd-grain{position:absolute;inset:0;pointer-events:none;z-index:2;
-  opacity:%(grain)s;background-repeat:repeat}
+  background-repeat:repeat}
 #amd-face{position:relative;height:%(faceh)dpx;flex:none;overflow:hidden;
   border-bottom:2px solid %(edge)s;background:#000}
 #amd-face img{position:absolute;left:50%%;bottom:0;height:112%%;width:auto;
@@ -359,38 +359,13 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 </div>
 <script>
 %(voicejs)s
+%(grainjs)s
 (function(){
   var PICS=%(face)s, MOODS=%(moods)s, NAME=%(name)s, THUMBMOOD=%(thumbmood)s;
   var log=document.getElementById("amd-log"), img=document.getElementById("amd-img");
   var status=document.getElementById("amd-status");
   var VC=%(vconf)s;
-  // A tile made once and repeated. Shipping a PNG would mean another file
-  // routed through the add-on's web exports for no benefit.
-  if (%(grainon)s){
-    // Four tiles made once and cycled, rather than one tile slid around. A
-    // sliding tile is a moving pattern; grain is supposed to be different every
-    // frame, and the eye picks up the difference immediately.
-    var N=96, tiles=[], grain=document.getElementById("amd-grain");
-    for(var t=0;t<4;t++){
-      var cv=document.createElement("canvas"); cv.width=cv.height=N;
-      var cx=cv.getContext("2d"), id=cx.createImageData(N,N);
-      for(var i=0;i<id.data.length;i+=4){
-        var v=(Math.random()*255)|0;
-        id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=120;
-      }
-      cx.putImageData(id,0,0);
-      tiles.push("url("+cv.toDataURL("image/png")+")");
-    }
-    grain.style.backgroundImage=tiles[0];
-    var still=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if(!still){
-      var k=0;
-      setInterval(function(){
-        k=(k+1+((Math.random()*3)|0))%%tiles.length;   // never the same one twice
-        grain.style.backgroundImage=tiles[k];
-      },90);
-    }
-  }
+  amdGrain(document.getElementById("amd-grain"), %(grain)s);
 
   function pick(a){return a[(Math.random()*a.length)|0]}
   // The whole ordered list, not one at random: the three pictures behind an
@@ -470,12 +445,8 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
        "zoom": max(100, min(int(cfg.get("chat_thumb_zoom") or 240), 800)),
        "thumby": max(0, min(int(cfg.get("chat_thumb_y") or 20), 100)),
        "thumbmood": "true" if cfg.get("chat_thumb_expression", True) else "false",
-       # Measured, not guessed. Random alpha reads the same on a near-black
-       # ground and on paper, so there is one number here rather than a light
-       # and a dark one -- and the number is what it is because 0.22 measured
-       # as present-but-unnoticeable on the panel it actually ships on.
-       "grain": "%.2f" % max(0.0, min(float(cfg.get("grain_opacity") or 0.45), 1.0)),
-       "grainon": "true" if cfg.get("effects", True) else "false"}
+       "grain": json.dumps(grain.settings(cfg)),
+       "grainjs": grain.JS}
 
 
 def measure(cfg, turns, summary=""):
