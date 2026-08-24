@@ -316,7 +316,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 /* Grain over the whole frame, not just the portrait: without it the panel is a
    clean rectangle bolted onto a picture that is pretending to be a worn tape. */
 #amd-grain{position:absolute;inset:0;pointer-events:none;z-index:9;
-  opacity:%(grain)s;mix-blend-mode:%(grainmode)s;background-repeat:repeat;
+  opacity:%(grain)s;background-repeat:repeat;
   animation:amdCrawl .7s steps(3) infinite}
 @keyframes amdCrawl{0%%{background-position:0 0}33%%{background-position:-13px 8px}
   66%%{background-position:10px -6px}100%%{background-position:0 0}}
@@ -373,9 +373,12 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   if (%(grainon)s){
     var N=64, cv=document.createElement("canvas"); cv.width=cv.height=N;
     var cx=cv.getContext("2d"), id=cx.createImageData(N,N);
+    // Alpha acak, bukan blend mode: 'overlay' di atas latar nyaris hitam
+    // menghasilkan simpangan 1 dari 255 -- ada, tapi tak terlihat. Butiran
+    // tembus pandang menumpuk apa adanya, jadi jalan di gelap maupun terang.
     for(var i=0;i<id.data.length;i+=4){
       var v=(Math.random()*255)|0;
-      id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=255;
+      id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=70;   // butiran tembus pandang
     }
     cx.putImageData(id,0,0);
     document.getElementById("amd-grain").style.backgroundImage=
@@ -460,10 +463,10 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
        "zoom": max(100, min(int(cfg.get("chat_thumb_zoom") or 240), 800)),
        "thumby": max(0, min(int(cfg.get("chat_thumb_y") or 20), 100)),
        "thumbmood": "true" if cfg.get("chat_thumb_expression", True) else "false",
-       # Grain darkens as much as it lightens; on a pale ground "overlay" turns
-       # to dirt, so a light theme gets the gentler blend and less of it.
-       "grain": "0.07" if c["light"] else "0.15",
-       "grainmode": "multiply" if c["light"] else "overlay",
+       # Measured, not guessed: at this opacity the grain reads about the
+       # same on a near-black ground and on paper, which is why there is one
+       # number here instead of a light and a dark one.
+       "grain": "0.22",
        "grainon": "true" if cfg.get("effects", True) else "false"}
 
 
