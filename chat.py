@@ -32,16 +32,29 @@ TITLE = "Amadeus"
 
 
 class MoodHead:
-    """She is asked to open with `[mood] `. Hold the first few characters back
-    until the tag can be recognised, so it never flickers on screen before it
-    gets stripped. If it never comes, everything held back is released."""
+    """She is asked to open with a face tag. Hold the first few characters back
+    until it can be recognised, so it never flickers on screen before it gets
+    stripped, and release everything held back if it never comes.
+
+    Both bracket shapes are accepted because models pick one and stick to it,
+    and which one is not something a prompt reliably decides. They are not
+    treated the same, though: `[...]` is unambiguous enough to strip whatever is
+    inside, while `(...)` is ordinary punctuation, so it is only taken as a tag
+    when it names a mood we actually have. Otherwise an opening aside -- "(Ya,
+    lagi.) Kartunya..." -- would silently lose its first clause.
+    """
 
     LIMIT = 40
+    PAIRS = {"[": "]", "(": ")", "\uff08": "\uff09", "\u3010": "\u3011"}
 
     def __init__(self, allowed):
-        self.allowed = set(allowed)
+        self.allowed = {str(a).strip().lower() for a in allowed}
         self.buf = ""
         self.done = False
+
+    def _release(self):
+        out, self.buf, self.done = self.buf, "", True
+        return None, out
 
     def feed(self, delta):
         """-> (mood or None, text to display)"""
@@ -51,22 +64,26 @@ class MoodHead:
         head = self.buf.lstrip()
         if not head:
             return None, ""
-        if not head.startswith("["):
-            self.done = True
-            out, self.buf = self.buf, ""
-            return None, out
-        close = head.find("]")
+
+        shut = self.PAIRS.get(head[0])
+        if shut is None:
+            return self._release()
+
+        close = head.find(shut)
         if close < 0:
             if len(head) > self.LIMIT:      # not a tag after all
-                self.done = True
-                out, self.buf = self.buf, ""
-                return None, out
-            return None, ""                 # still waiting
+                return self._release()
+            return None, ""                 # still waiting for the rest
+
         name = head[1:close].strip().lower()
-        rest = head[close + 1:].lstrip()
+        known = name in self.allowed
+        if head[0] != "[" and not known:
+            # a real parenthesis, not a face tag
+            return self._release()
+
         self.done = True
         self.buf = ""
-        return (name if name in self.allowed else None), rest
+        return (name if known else None), head[close + 1:].lstrip()
 
     def flush(self):
         out, self.buf, self.done = self.buf, "", True
@@ -192,6 +209,7 @@ class ChatDock(QDockWidget):
         self._stop = threading.Event()
         self._busy = False
         self._head: MoodHead | None = None
+        self._moods: Any = {}
 
         box = QWidget(self)
         lay = QVBoxLayout(box)
@@ -293,7 +311,8 @@ class ChatDock(QDockWidget):
 
         self._busy = True
         self._stop.clear()
-        self._head = MoodHead(cfg["chat_moods"])
+        self._moods = cfg["chat_moods"]
+        self._head = MoodHead(self._moods)
         self.send_btn.setText("Stop")
         self._say("status", "%s memikirkan…" % provider["model"])
         self._say("open")
@@ -343,10 +362,13 @@ class ChatDock(QDockWidget):
         self._say("status", "")
         text = whole.strip()
         if text:
-            # store what she said without the face tag, so the next turn's
-            # history does not teach her to repeat it as literal text
-            head = MoodHead([])
-            _mood, body = head.feed(text)
+            # Store what she said without the face tag, so the next turn's
+            # history does not teach her to repeat it as literal text. The same
+            # mood list as the live parse, or a "(normal)" opener would survive
+            # into history while being stripped on screen.
+            strip = MoodHead(self._moods or [])
+            _mood, body = strip.feed(text)
+            body += strip.flush()
             self._turns.append({"role": "assistant", "content": (body or text).strip()})
 
     def _history(self, cfg, text):

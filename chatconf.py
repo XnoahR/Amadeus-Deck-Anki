@@ -46,9 +46,13 @@ DEFAULT_CHAT_MOODS = {
 }
 
 MOOD_RULE = (
-    "Mulai setiap balasan dengan satu penanda ekspresi dalam kurung siku, "
-    "lalu spasi, lalu jawabanmu. Pilih dari: %s. "
-    "Jangan pernah menyebut penanda itu di dalam kalimatmu."
+    "Mulai SETIAP balasan dengan satu penanda ekspresi di dalam kurung siku, "
+    "lalu spasi, lalu jawabanmu.\n"
+    "Contoh persis: [happy] Akhirnya balik juga.\n"
+    "Pilih satu dari: %s.\n"
+    "Pakai kurung siku [ ], bukan kurung biasa. Jangan pernah menyebut "
+    "penanda itu di dalam kalimatmu, dan jangan menaruhnya di tengah atau di "
+    "akhir balasan."
 )
 
 PROVIDER_FIELDS: dict[str, Any] = {
