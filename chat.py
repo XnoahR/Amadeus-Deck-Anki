@@ -28,7 +28,6 @@ from aqt.webview import AnkiWebView
 from . import cardctx, chatconf, providers, voice
 
 DOCK_NAME = "amadeusChatDock"
-TITLE = "Amadeus"
 
 
 class MoodHead:
@@ -200,7 +199,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 
 class ChatDock(QDockWidget):
     def __init__(self, parent):
-        QDockWidget.__init__(self, TITLE, parent)
+        QDockWidget.__init__(self, chatconf.who(chatconf.load())[0], parent)
         self.setObjectName(DOCK_NAME)
         self.setAllowedAreas(Qt.DockWidgetArea.RightDockWidgetArea
                              | Qt.DockWidgetArea.LeftDockWidgetArea)
@@ -253,6 +252,7 @@ class ChatDock(QDockWidget):
         cfg = chatconf.load()
         pics = pictures()
         theme = (mw.addonManager.getConfig(chatconf.PACKAGE) or {}).get("theme", "vhs")
+        self.setWindowTitle(chatconf.who(cfg)[0])
         self.web.stdHtml(_page(cfg, pics, theme), css=[], js=[],
                          context=self, default_css=False)
         names = chatconf.provider_names(cfg)
@@ -423,7 +423,7 @@ def toggle():
     global _dock
     cfg = chatconf.load()
     if not cfg["chat_enabled"]:
-        tooltip("Chat Amadeus dimatikan di config.")
+        tooltip("Chat %s dimatikan di config." % chatconf.who(cfg)[0])
         return
     from . import pictures
 
@@ -458,7 +458,7 @@ def register():
 
     def setup():
         cfg = chatconf.load()
-        act = QAction("Amadeus: buka chat", mw)
+        act = QAction("%s: buka chat" % chatconf.who(cfg)[0], mw)
         keys = str(cfg.get("chat_shortcut") or "").strip()
         if keys:
             act.setShortcut(QKeySequence(keys))

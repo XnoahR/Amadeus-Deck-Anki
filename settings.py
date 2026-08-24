@@ -49,7 +49,7 @@ GROUPS: list[tuple[str, list[str]]] = [
       "dialog_mouth", "dialog_mouth_ms", "dialog_caret", "dialog_caret_char",
       "dialog_sound", "dialog_volume", "dialog_pitch", "dialog_every"]),
     ("AI / CHAT",
-     ["chat_enabled", "chat_shortcut", "chat_width", "chat_face_height",
+     ["character_name", "user_name", "chat_enabled", "chat_shortcut", "chat_width", "chat_face_height",
       "active_provider", "providers", "persona", "send_study_context",
       "send_card_context", "max_context_chars", "max_history_turns",
       "max_tokens", "timeout_seconds"]),
@@ -155,12 +155,14 @@ TABS: list[tuple[str, list[tuple]]] = [
         ("reviewer_hide_seconds", "Kalimatnya hilang setelah (detik)", "int", 1, 60),
     ]),
     ("Chat / AI", [
+        ("character_name", "Namanya", "text"),
+        ("user_name", "Panggil kamu apa (kosong = nama profil Anki)", "text"),
         ("chat_enabled", "Aktifkan chat", "bool"),
         ("chat_shortcut", "Tombol pintas", "text"),
         ("chat_width", "Lebar panel chat (px)", "int", 280, 1200),
         ("chat_face_height", "Tinggi potret di panel chat (px)", "int", 90, 600),
         ("__provider__", "", "provider"),
-        ("persona", "Siapa dia (persona)", "longtext"),
+        ("persona", "Siapa dia (persona) - {name} dan {user} akan diganti", "longtext"),
         ("send_study_context", "Beri tahu dia angka belajarmu hari ini", "bool"),
         ("send_card_context", "Beri tahu dia kartu yang sedang terbuka", "bool"),
     ]),
@@ -405,7 +407,7 @@ def register():
     gui_hooks.addon_config_editor_will_update_json.append(on_update_json)
 
     def setup():
-        act = QAction("Amadeus: pengaturan…", mw)
+        act = QAction("Amadeus Deck: pengaturan…", mw)
         act.triggered.connect(lambda _=False: open_dialog())
         mw.form.menuTools.addAction(act)
 

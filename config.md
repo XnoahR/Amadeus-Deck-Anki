@@ -144,6 +144,13 @@ Dia bisa diajak bicara: **Tools → Amadeus: buka chat** (atau `Ctrl+Shift+M`).
 Jawabannya diketik dengan suara 8-bit yang sama, dan potretnya berganti ikut
 nada jawabannya.
 
+**`character_name`** — namanya. Dipakai di judul panel, di menu Tools, dan
+menggantikan `{name}` di persona.
+
+**`user_name`** — dia memanggilmu apa. Dikosongkan berarti memakai nama profil
+Anki-mu, yang sudah tampil di panel deck; menanyakannya dua kali cuma
+merepotkan.
+
 **`persona`** — siapa dia. Ini yang paling berpengaruh. Tulis sebagai perintah,
 bukan deskripsi; model menuruti yang pertama dan mengabaikan yang kedua.
 

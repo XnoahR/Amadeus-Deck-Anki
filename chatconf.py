@@ -25,7 +25,7 @@ PACKAGE = __name__.split(".")[0]
 # Who she is by default. Written as instructions rather than description,
 # because a model follows the first and ignores the second.
 DEFAULT_PERSONA = (
-    "Kamu Amadeus, pendamping belajar yang tinggal di dalam Anki-nya pengguna.\n"
+    "Kamu {name}, pendamping belajar yang tinggal di dalam Anki-nya {user}.\n"
     "Kamu tajam, sedikit sarkastik, dan diam-diam peduli. Kamu tidak memuji "
     "berlebihan dan tidak menceramahi.\n"
     "Jawab dalam bahasa yang dipakai pengguna. Pendek -- dua sampai empat "
@@ -78,6 +78,8 @@ KIND_DEFAULTS: dict[str, dict[str, str]] = {
 }
 
 DEFAULTS: dict[str, Any] = {
+    "character_name": "Amadeus",
+    "user_name": "",
     "chat_enabled": True,
     "chat_shortcut": "Ctrl+Shift+M",
     "chat_width": 420,
@@ -204,6 +206,28 @@ def resolve_api_key(provider: dict[str, Any]) -> str:
     return cursor.strip()
 
 
+def who(cfg: dict[str, Any]) -> tuple[str, str]:
+    """Her name and yours. Yours falls back to the Anki profile name, which is
+    already on screen in the deck panel -- asking for it twice would be odd."""
+    her = str(cfg.get("character_name") or "").strip() or "Amadeus"
+    you = str(cfg.get("user_name") or "").strip()
+    if not you:
+        try:
+            you = (mw.pm.name or "").strip()
+        except Exception:
+            you = ""
+    return her, you or "pengguna"
+
+
+def fill(text: str, **names) -> str:
+    """Substitute {name} and {user} without letting an unknown or malformed
+    placeholder in someone's own persona blow up the request."""
+    out = str(text or "")
+    for key, value in names.items():
+        out = out.replace("{%s}" % key, str(value))
+    return out
+
+
 def system_prompt(cfg: dict[str, Any], study: str = "") -> str:
     """Persona, then how to signal a face, then today's figures.
 
@@ -211,7 +235,8 @@ def system_prompt(cfg: dict[str, Any], study: str = "") -> str:
     can mention them unprompted -- which is the whole point of her living in
     Anki rather than in a browser tab.
     """
-    parts = [str(cfg.get("persona") or DEFAULT_PERSONA).strip()]
+    her, you = who(cfg)
+    parts = [fill(cfg.get("persona") or DEFAULT_PERSONA, name=her, user=you).strip()]
     moods = ", ".join(sorted(cfg["chat_moods"]))
     parts.append(MOOD_RULE % moods)
     if study:
