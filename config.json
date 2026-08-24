@@ -45,7 +45,7 @@
     {
       "name": "OpenCode",
       "kind": "openai",
-      "model": "deepseek-v4-flash-free",
+      "model": "mimo-v2.5-free",
       "base_url": "https://opencode.ai/zen/v1",
       "api_key": "",
       "context_window": 0
