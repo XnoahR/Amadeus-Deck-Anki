@@ -211,7 +211,7 @@ def panel_css(name: str) -> str:
 .{k} .amd-base{{{{filter:grayscale(1) sepia(1) hue-rotate({hue}deg) saturate(3.4)
   brightness(1.1);opacity:.92}}}}
 .{k} .amd-ghost{{{{display:none}}}}
-.{k} .amd-slice{{{{clip-path:inset(38% 0 46% 0);
+.{k} .amd-slice{{{{opacity:0;clip-path:inset(38% 0 46% 0);
   filter:grayscale(1) sepia(1) hue-rotate({hue2}deg) saturate(4) brightness(1.15);
   animation:amdSlice 4.2s steps(1) infinite}}}}
 @keyframes amdSlice{{{{0%,72%{{{{transform:translateX(-50%);opacity:0}}}}

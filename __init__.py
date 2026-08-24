@@ -460,7 +460,7 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
   font-family:ui-monospace,monospace}}
 .amd-empty{{position:relative;z-index:3;padding:14px;font-size:12px;line-height:1.6;
   color:#9c90b4}}
-#amd-panel.amd-jolt .amd-img{{animation:amdJolt .34s steps(2)}}
+#amd-panel.amd-jolt .amd-img:not(.amd-slice){{animation:amdJolt .34s steps(2)}}
 @keyframes amdJolt{{0%{{transform:translate(calc(-50% - 8px))}}
   30%{{transform:translate(calc(-50% + 7px))}}
   60%{{transform:translate(calc(-50% - 4px))}}100%{{transform:translateX(-50%)}}}}
@@ -555,6 +555,10 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
     if(pool.length)VOICE.say(say,pick(pool));
     panel.classList.remove("amd-jolt");void panel.offsetWidth;
     panel.classList.add("amd-jolt");
+    // The class has to come back off. While it is on, every .amd-img is running
+    // amdJolt, which replaces the slice's own animation -- and a slice with no
+    // animation falls back to opacity 1 and sits there.
+    setTimeout(function(){{panel.classList.remove("amd-jolt")}},360);
   }}
   function settle(ms){{
     clearTimeout(timer);

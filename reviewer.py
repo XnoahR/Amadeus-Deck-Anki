@@ -162,7 +162,7 @@ __VOICE__
               ".c{animation:sc 3.7s steps(1) infinite}" : "")
       : ".base{filter:grayscale(1) sepia(1) hue-rotate(" + D.rot[0] + "deg) saturate(3.4) brightness(1.1);opacity:.92}" +
         ".ghost{display:none}" +
-        ".slice{clip-path:inset(38% 0 46% 0);" +
+        ".slice{opacity:0;clip-path:inset(38% 0 46% 0);" +
           "filter:grayscale(1) sepia(1) hue-rotate(" + D.rot[1] + "deg) saturate(4) brightness(1.15);opacity:0}" +
         (fx ? ".slice{animation:sl 4.2s steps(1) infinite}" : "")) +
     "@keyframes sr{0%,88%{transform:translateX(-50%)}" +
@@ -191,7 +191,7 @@ __VOICE__
       "background:" + tint(P.ground, .9) + ";" +
       "color:" + P.ink + ";" +
       "border-top:" + thick + " solid " + P.edge + "}" +
-    ".jolt img{animation:j .3s steps(2)}" +
+    ".jolt img:not(.slice){animation:j .3s steps(2)}" +
     ".jolt .noise{opacity:.42}" +
     "@keyframes j{0%{transform:translate(calc(-50% - 7px))}" +
       "40%{transform:translate(calc(-50% + 6px))}100%{transform:translateX(-50%)}}" +
