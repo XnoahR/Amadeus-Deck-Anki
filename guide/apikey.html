@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Amadeus Deck — cara dapat API key</title>
+<style>
+  :root{
+    --ink:#f2ecff; --dim:#9a8fb5; --edge:#ff2d55; --ground:#0d0b12;
+    --card:#141019; --line:#2b1f3d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);line-height:1.65;
+       font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px}
+  .wrap{max-width:640px;margin:0 auto;padding:34px 22px 80px}
+  h1{font-size:23px;margin:0 0 6px;letter-spacing:.01em}
+  h2{font-size:16px;margin:34px 0 10px;letter-spacing:.02em}
+  p{margin:0 0 13px}
+  .lead{color:var(--dim);margin-bottom:26px}
+  a{color:var(--edge)}
+  code{background:var(--card);border:1px solid var(--line);padding:1px 6px;
+       font-family:"DejaVu Sans Mono",ui-monospace,Menlo,Consolas,monospace;
+       font-size:13px;word-break:break-all}
+  .switch{display:flex;gap:0;margin-bottom:26px;border:1px solid var(--line);width:max-content}
+  .switch button{font:inherit;font-size:13px;padding:6px 16px;background:transparent;
+                 color:var(--dim);border:0;cursor:pointer}
+  .switch button.on{background:var(--edge);color:var(--ground);font-weight:600}
+  ol{padding-left:0;list-style:none;counter-reset:s;margin:0}
+  ol li{counter-increment:s;position:relative;padding-left:42px;margin-bottom:20px}
+  ol li::before{content:counter(s);position:absolute;left:0;top:1px;width:27px;height:27px;
+    border:1px solid var(--edge);color:var(--edge);display:flex;align-items:center;
+    justify-content:center;font-size:13px;font-weight:600}
+  table{border-collapse:collapse;width:100%;margin:6px 0 16px;font-size:14px}
+  td,th{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:var(--card);font-weight:600;width:34%}
+  .note{border-left:2px solid var(--edge);background:var(--card);padding:11px 15px;
+        margin:16px 0;font-size:14px}
+  .warn{border-left-color:#ffb200}
+  .warn b{color:#ffb200}
+  .foot{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
+        color:var(--dim);font-size:13px}
+  [data-lang]{display:none}
+  body.id [data-lang="id"],body.en [data-lang="en"]{display:block}
+  li[data-lang],td[data-lang],th[data-lang],span[data-lang]{display:none}
+  body.id li[data-lang="id"],body.en li[data-lang="en"]{display:list-item}
+  body.id td[data-lang="id"],body.en td[data-lang="en"],
+  body.id th[data-lang="id"],body.en th[data-lang="en"],
+  body.id span[data-lang="id"],body.en span[data-lang="en"]{display:table-cell}
+  body.id span[data-lang="id"],body.en span[data-lang="en"]{display:inline}
+</style>
+</head>
+<body class="id">
+<div class="wrap">
+
+<div class="switch">
+  <button id="b-id" class="on">Bahasa Indonesia</button>
+  <button id="b-en">English</button>
+</div>
+
+<!-- ==================== INDONESIA ==================== -->
+<div data-lang="id">
+  <h1>Cara dapat API key</h1>
+  <p class="lead">Supaya Amadeus bisa diajak bicara, dia butuh satu model bahasa
+    untuk menjawab. Ada dua tempat yang gampang, dan keduanya punya model gratis.
+    Sekitar lima menit.</p>
+
+  <h2>Pilihan 1 — OpenCode Zen <span style="color:var(--edge)">(disarankan)</span></h2>
+  <ol>
+    <li>Buka <a href="https://opencode.ai/auth" target="_blank">opencode.ai/auth</a>
+      dan masuk.</li>
+    <li>Salin <b>API key</b>-mu dari sana.</li>
+    <li>Di Anki: <b>Tools → Amadeus Deck: pengaturan…</b> → tab <b>Chat / AI</b>,
+      isi seperti tabel di bawah.</li>
+  </ol>
+  <table>
+    <tr><th>Nama</th><td>bebas, misalnya <code>OpenCode</code></td></tr>
+    <tr><th>Model</th><td><code>deepseek-v4-flash-free</code></td></tr>
+    <tr><th>Alamat API</th><td><code>https://opencode.ai/zen/v1</code></td></tr>
+    <tr><th>API key</th><td>kunci yang barusan kamu salin</td></tr>
+  </table>
+  <p>Klik <b>Simpan</b>, lalu buka chatnya dengan <code>Ctrl+Shift+M</code>.</p>
+  <div class="note warn">
+    <p><b>Yang perlu kamu tahu sebelum daftar:</b> waktu mendaftar, OpenCode Zen
+      meminta detail penagihan (kartu) walaupun kamu cuma memakai model gratis.</p>
+    <p style="margin:0">Model gratisnya juga <b>sementara</b> — tulisan
+      <i>"limited time"</i> ada di dokumentasi mereka. Kalau suatu hari
+      jawabannya berhenti, kemungkinan besar modelnya sudah ditarik; ganti ke
+      yang lain dari daftar.</p>
+  </div>
+
+  <h2>Pilihan 2 — OpenRouter</h2>
+  <ol>
+    <li>Buka <a href="https://openrouter.ai" target="_blank">openrouter.ai</a>,
+      klik <b>Sign in</b>. Bisa pakai Google atau GitHub.</li>
+    <li>Buka <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>,
+      klik <b>Create Key</b>, beri nama misalnya <code>anki</code>.</li>
+    <li><b>Salin sekarang juga</b> — kuncinya cuma ditampilkan sekali. Diawali
+      <code>sk-or-v1-</code>.</li>
+  </ol>
+  <table>
+    <tr><th>Model</th><td>yang berakhiran <code>:free</code>, misalnya
+      <code>z-ai/glm-5.2:free</code></td></tr>
+    <tr><th>Alamat API</th><td><code>https://openrouter.ai/api/v1</code></td></tr>
+  </table>
+  <p>Model gratis OpenRouter punya batas permintaan per hari; batasnya lebih
+    longgar kalau akunmu pernah membeli kredit. Angkanya sesekali berubah, jadi
+    lihat di <a href="https://openrouter.ai/docs/faq" target="_blank">FAQ mereka</a>.</p>
+
+  <h2>Mencari model lain</h2>
+  <p>Daftar model OpenCode Zen yang sedang hidup bisa dilihat langsung di
+    <a href="https://opencode.ai/zen/v1/models" target="_blank">opencode.ai/zen/v1/models</a>
+    — yang namanya berakhiran <code>-free</code> tidak menagih biaya. Untuk
+    OpenRouter, ada di
+    <a href="https://openrouter.ai/models?max_price=0" target="_blank">openrouter.ai/models</a>.</p>
+
+  <div class="note warn">
+    <p><b>Ini yang paling penting.</b> Amadeus bisa mengirim isi kartu yang
+      sedang terbuka, catatan <i>"yang perlu dia ingat tentang kamu"</i>, dan
+      angka belajarmu ke model yang kamu pilih.</p>
+    <p>Sebagian model gratis — di kedua layanan — memakai data yang masuk untuk
+      memperbaiki model mereka selama masa gratisnya. Model gratis Nemotron
+      bahkan ditandai <i>"trial use only — do not submit personal or
+      confidential data"</i>.</p>
+    <p style="margin:0">Kalau kartumu atau catatanmu berisi hal pribadi,
+      matikan <b>"Beri tahu dia kartu yang sedang terbuka"</b> di pengaturan,
+      atau pakai model berbayar yang menjanjikan tidak menyimpan data.</p>
+  </div>
+
+  <h2>Kalau tidak jalan</h2>
+  <table>
+    <tr><th>Pesannya menyebut 401</th><td>Kuncinya salah salin, atau ada spasi
+      ikut tersalin di depan/belakang. Salin ulang.</td></tr>
+    <tr><th>Menyebut 429</th><td>Batas hariannya habis, atau terlalu cepat
+      berturut-turut. Tunggu, atau ganti model.</td></tr>
+    <tr><th>Menyebut 404 atau "model not found"</th><td>Nama modelnya salah
+      ketik, atau modelnya sudah ditarik. Salin persis dari daftar model.</td></tr>
+    <tr><th>Tidak ada yang terjadi</th><td>Pastikan <b>Aktifkan chat</b> menyala,
+      dan Anki sudah di-restart setelah add-on dipasang.</td></tr>
+  </table>
+
+  <h2>Soal keamanan</h2>
+  <p>Kunci itu seperti password: siapa pun yang punya bisa memakai akunmu.
+    Jangan tempel di Discord atau tertinggal di screenshot. Kalau bocor, hapus
+    kuncinya di halaman tempat kamu membuatnya, lalu buat yang baru.</p>
+  <p>Kalau kamu tidak mau kuncinya tersimpan di dalam <code>config.json</code>,
+    di config lanjutan ada <code>api_key_env</code> untuk membacanya dari
+    environment variable, atau <code>api_key_file</code> +
+    <code>api_key_path</code> untuk membacanya dari file JSON di luar Anki.</p>
+</div>
+
+<!-- ==================== ENGLISH ==================== -->
+<div data-lang="en">
+  <h1>Getting an API key</h1>
+  <p class="lead">For Amadeus to talk back, she needs a language model to answer
+    with. Two places are easy, and both have free models. About five minutes.</p>
+
+  <h2>Option 1 — OpenCode Zen <span style="color:var(--edge)">(recommended)</span></h2>
+  <ol>
+    <li>Go to <a href="https://opencode.ai/auth" target="_blank">opencode.ai/auth</a>
+      and sign in.</li>
+    <li>Copy your <b>API key</b> from there.</li>
+    <li>In Anki: <b>Tools → Amadeus Deck: pengaturan…</b> → <b>Chat / AI</b> tab,
+      fill in the table below.</li>
+  </ol>
+  <table>
+    <tr><th>Nama (name)</th><td>anything, e.g. <code>OpenCode</code></td></tr>
+    <tr><th>Model</th><td><code>deepseek-v4-flash-free</code></td></tr>
+    <tr><th>Alamat API (API address)</th>
+      <td><code>https://opencode.ai/zen/v1</code></td></tr>
+    <tr><th>API key</th><td>the key you just copied</td></tr>
+  </table>
+  <p>Click <b>Simpan</b> (save), then open the chat with
+    <code>Ctrl+Shift+M</code>.</p>
+  <div class="note warn">
+    <p><b>Before you sign up:</b> OpenCode Zen asks for billing details at
+      sign-up even if you only ever use the free models.</p>
+    <p style="margin:0">Those free models are also <b>temporary</b> — their docs
+      say <i>"limited time"</i>. If answers stop one day, the model has most
+      likely been withdrawn; pick another from the list.</p>
+  </div>
+
+  <h2>Option 2 — OpenRouter</h2>
+  <ol>
+    <li>Go to <a href="https://openrouter.ai" target="_blank">openrouter.ai</a>
+      and click <b>Sign in</b>. Google or GitHub both work.</li>
+    <li>Open <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>,
+      click <b>Create Key</b>, name it something like <code>anki</code>.</li>
+    <li><b>Copy it straight away</b> — it is shown once. It starts with
+      <code>sk-or-v1-</code>.</li>
+  </ol>
+  <table>
+    <tr><th>Model</th><td>anything ending in <code>:free</code>, e.g.
+      <code>z-ai/glm-5.2:free</code></td></tr>
+    <tr><th>Alamat API (API address)</th>
+      <td><code>https://openrouter.ai/api/v1</code></td></tr>
+  </table>
+  <p>OpenRouter's free models have a daily request cap, more generous if your
+    account has ever bought credits. The numbers move, so check their
+    <a href="https://openrouter.ai/docs/faq" target="_blank">FAQ</a>.</p>
+
+  <h2>Finding other models</h2>
+  <p>OpenCode Zen's live list is at
+    <a href="https://opencode.ai/zen/v1/models" target="_blank">opencode.ai/zen/v1/models</a>
+    — anything ending in <code>-free</code> costs nothing. OpenRouter's is at
+    <a href="https://openrouter.ai/models?max_price=0" target="_blank">openrouter.ai/models</a>.</p>
+
+  <div class="note warn">
+    <p><b>This is the part that matters.</b> Amadeus can send the card you have
+      open, the <i>"what she should remember about you"</i> note, and your study
+      figures to whichever model you pick.</p>
+    <p>Some free models — on both services — use what arrives to improve the
+      model during the free period. The free Nemotron models are marked
+      <i>"trial use only — do not submit personal or confidential data"</i>.</p>
+    <p style="margin:0">If your cards or notes hold anything private, turn off
+      <b>"Beri tahu dia kartu yang sedang terbuka"</b> in the settings, or use a
+      paid model that promises not to retain data.</p>
+  </div>
+
+  <h2>When it does not work</h2>
+  <table>
+    <tr><th>It mentions 401</th><td>The key was mis-copied, or a space came
+      along at either end. Copy it again.</td></tr>
+    <tr><th>It mentions 429</th><td>The daily cap is spent, or requests came too
+      fast. Wait, or switch models.</td></tr>
+    <tr><th>404 or "model not found"</th><td>The model name has a typo, or the
+      model has been withdrawn. Copy it exactly from the model list.</td></tr>
+    <tr><th>Nothing happens</th><td>Check that <b>Aktifkan chat</b> is on, and
+      that Anki was restarted after the add-on was installed.</td></tr>
+  </table>
+
+  <h2>About safety</h2>
+  <p>The key is a password: anyone holding it can spend on your account. Do not
+    paste it into Discord or leave it in a screenshot. If it leaks, delete it
+    where you made it and create another.</p>
+  <p>If you would rather it did not sit inside <code>config.json</code>, the
+    advanced config takes <code>api_key_env</code> to read it from an
+    environment variable, or <code>api_key_file</code> plus
+    <code>api_key_path</code> to read it out of a JSON file kept elsewhere.</p>
+</div>
+
+<div class="foot">
+  <p data-lang="id" style="margin:0">Panduan ini bagian dari add-on
+    <b>Amadeus Deck</b>. Ada yang salah atau sudah berubah? Buka isu di
+    <a href="https://github.com/XnoahR/Amadeus-Deck-Anki" target="_blank">GitHub</a>.</p>
+  <p data-lang="en" style="margin:0">This guide ships with the <b>Amadeus Deck</b>
+    add-on. Something wrong or out of date? Open an issue on
+    <a href="https://github.com/XnoahR/Amadeus-Deck-Anki" target="_blank">GitHub</a>.</p>
+</div>
+
+<script>
+  const body = document.body;
+  const bid = document.getElementById("b-id"), ben = document.getElementById("b-en");
+  function set(lang){
+    body.className = lang;
+    bid.classList.toggle("on", lang === "id");
+    ben.classList.toggle("on", lang === "en");
+    document.documentElement.lang = lang;
+    try{ localStorage.setItem("amdGuideLang", lang); }catch(e){}
+  }
+  bid.onclick = () => set("id");
+  ben.onclick = () => set("en");
+  try{
+    const saved = localStorage.getItem("amdGuideLang");
+    if(saved === "en" || saved === "id") set(saved);
+  }catch(e){}
+</script>
+</div>
+</body>
+</html>

@@ -449,6 +449,16 @@ class ChatDock(QDockWidget):
         except chatconf.KeyLookupError as exc:
             showWarning(str(exc))
             return
+        if not key:
+            # The one moment a non-technical person is certainly stuck, so this
+            # points at the guide instead of letting the provider answer with
+            # an HTTP status.
+            from . import settings
+
+            showWarning("Belum ada API key untuk \"%s\".\n\n"
+                        "Panduannya akan dibuka di browser." % provider["name"])
+            settings.open_guide()
+            return
 
         self.input.clear()
         self._say("me", text)

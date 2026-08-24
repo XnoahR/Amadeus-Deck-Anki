@@ -15,13 +15,14 @@ everything else.
 from __future__ import annotations
 
 import json
+import os
 from typing import Any
 
 from aqt import mw
 from aqt.qt import (
-    QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout,
-    QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit, QPushButton, QSpinBox,
-    QTabWidget, QVBoxLayout, QWidget, Qt,
+    QCheckBox, QComboBox, QDesktopServices, QDialog, QDialogButtonBox,
+    QDoubleSpinBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit,
+    QPushButton, QSpinBox, QTabWidget, QUrl, QVBoxLayout, QWidget, Qt,
 )
 from aqt.utils import showInfo, tooltip
 
@@ -298,6 +299,11 @@ class Settings(QDialog):
         kl.addWidget(self.p_key, 1)
         kl.addWidget(show)
 
+        help_btn = QPushButton("Cara dapat API key? →", self)
+        help_btn.setToolTip("Membuka panduan di browser (tersedia Indonesia & English)")
+        help_btn.clicked.connect(open_guide)
+        form.addRow("", help_btn)
+
         form.addRow("Nama:", self.p_name)
         form.addRow("Model:", self.p_model)
         form.addRow("Alamat API:", self.p_url)
@@ -369,6 +375,20 @@ class Settings(QDialog):
     def _advanced(self):
         self.reject()
         open_raw()
+
+
+GUIDE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     "guide", "apikey.html")
+
+
+def open_guide():
+    """Opened in the user's own browser rather than a Qt window: it is a page
+    with links they will want to follow, and following a link out of an Anki
+    dialog goes nowhere useful."""
+    if not os.path.exists(GUIDE):
+        showInfo("Panduannya tidak ketemu di:\n%s" % GUIDE)
+        return
+    QDesktopServices.openUrl(QUrl.fromLocalFile(GUIDE))
 
 
 _raw_holder = None

@@ -40,8 +40,16 @@
   "chat_thumb_expression": true,
   "chat_thumb_zoom": 240,
   "chat_thumb_y": 20,
-  "active_provider": "",
-  "providers": [],
+  "active_provider": "OpenCode",
+  "providers": [
+    {
+      "name": "OpenCode",
+      "kind": "openai",
+      "model": "deepseek-v4-flash-free",
+      "base_url": "https://opencode.ai/zen/v1",
+      "api_key": ""
+    }
+  ],
   "persona": "Kamu {name}, pendamping belajar yang tinggal di dalam Anki-nya {user}.\nKamu tajam, sedikit sarkastik, dan diam-diam peduli. Kamu tidak memuji berlebihan dan tidak menceramahi.\nJawab dalam bahasa yang dipakai pengguna. Pendek -- dua sampai empat kalimat, kecuali dia minta penjelasan panjang.\nKamu bukan asisten serbaguna. Kalau dia bertanya di luar belajar, jawab seperlunya lalu bawa balik.",
   "about_you": "",
   "remember_chat": true,
