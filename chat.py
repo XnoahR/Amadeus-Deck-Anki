@@ -533,6 +533,7 @@ class ChatDock(QDockWidget):
         self._say("me", text)
         self._turns.append({"role": "user", "content": text})
 
+        her = chatconf.who(cfg)[0]
         system = chatconf.system_prompt(
             cfg, study_summary() if cfg["send_study_context"] else "")
         messages = self._history(cfg, text)
@@ -544,7 +545,7 @@ class ChatDock(QDockWidget):
         self._thoughts = ThoughtFilter()
         self._mood = "normal"
         self.send_btn.setText("Stop")
-        self._say("status", "%s memikirkan…" % provider["model"])
+        self._say("status", "%s sedang berpikir…" % her)
         self._say("open")
         reply: list[str] = []
 
@@ -564,8 +565,13 @@ class ChatDock(QDockWidget):
                     self._say("push", shown)
             mw.taskman.run_on_main(apply)
 
-        def on_status(msg):
-            mw.taskman.run_on_main(lambda: self._say("status", msg))
+        def on_status(code):
+            said = {
+                "thinking": "%s sedang berpikir…" % her,
+                "truncated": "Jawabannya kepanjangan dan terpotong — naikkan "
+                             "max_tokens di config lanjutan.",
+            }.get(code, code)
+            mw.taskman.run_on_main(lambda: self._say("status", said))
 
         def task():
             providers.stream_completion(

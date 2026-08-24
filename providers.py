@@ -3,7 +3,7 @@
 # by its author for this add-on. Moved rather than rewritten because this is
 # the expensive part of talking to a model -- streaming, six provider shapes,
 # and error messages a person can act on -- and it already worked there.
-"""LLM transport for Ayumi-Assistant.
+"""LLM transport for Amadeus Deck.
 
 Anki add-ons cannot pip-install, and the official SDKs pull in compiled
 dependencies that can't be vendored portably, so endpoints are spoken to
@@ -41,6 +41,13 @@ class ProviderError(Exception):
     """A user-facing failure: bad key, bad model, network trouble, refusal."""
 
 
+# on_status is given a short code, not a sentence. What the reader sees is the
+# caller's business: this module has no idea whose name is on the panel or what
+# language it speaks.
+STATUS_THINKING = "thinking"
+STATUS_TRUNCATED = "truncated"
+
+
 def stream_completion(
     provider: dict[str, Any],
     api_key: str,
@@ -73,9 +80,9 @@ def _require_key(provider: dict[str, Any], api_key: str) -> None:
     if provider["kind"] == "openai" and _is_local(provider["base_url"]):
         return  # local servers accept any key
     raise ProviderError(
-        f'No API key for provider "{provider["name"]}".\n\n'
-        "Open Tools → Add-ons → Ayumi-Assistant → Config and set `api_key` on "
-        "that provider (or point `api_key_file` / `api_key_env` at one)."
+        f'Belum ada API key untuk "{provider["name"]}".\n\n'
+        "Buka Tools → Amadeus Deck: pengaturan… → Chat / AI, lalu isi kolom "
+        "API key. Tombol di situ juga membuka panduan cara mendapatkannya."
     )
 
 
@@ -140,11 +147,11 @@ def _stream_anthropic(
                     got_text = True
                     on_text(text)
             elif delta.get("type") == "thinking_delta":
-                on_status("Thinking…")
+                on_status("thinking")
 
         elif kind == "content_block_start":
             if (event.get("content_block") or {}).get("type") == "thinking":
-                on_status("Thinking…")
+                on_status("thinking")
 
         elif kind == "message_delta":
             stop_reason = (event.get("delta") or {}).get("stop_reason") or stop_reason
@@ -154,12 +161,12 @@ def _stream_anthropic(
 
     if stop_reason == "refusal":
         raise ProviderError(
-            "The model declined to answer this request.\n\n"
-            "Rephrasing usually helps; if it keeps happening for ordinary study "
-            "questions, try a different model."
+            "Modelnya menolak menjawab permintaan ini.\n\n"
+            "Biasanya cukup diubah kalimatnya. Kalau terus terjadi untuk "
+            "pertanyaan belajar biasa, ganti modelnya."
         )
     if stop_reason == "max_tokens" and got_text:
-        on_status("Stopped at the max_tokens limit — raise it in the config.")
+        on_status("truncated")
 
 
 # --------------------------------------------------------------------------- #
@@ -251,11 +258,11 @@ def _iter_sse(
         raise ProviderError(_describe_http_error(exc)) from exc
     except urllib.error.URLError as exc:
         raise ProviderError(
-            f"Could not reach {url}\n\n{exc.reason}\n\n"
-            "Check your internet connection, and the provider's base_url."
+            f"Tidak bisa menghubungi {url}\n\n{exc.reason}\n\n"
+            "Periksa koneksi internetmu, dan alamat API providernya."
         ) from exc
     except OSError as exc:
-        raise ProviderError(f"Network error contacting {url}\n\n{exc}") from exc
+        raise ProviderError(f"Gangguan jaringan ke {url}\n\n{exc}") from exc
 
     with response:
         for raw_line in response:
