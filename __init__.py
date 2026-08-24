@@ -15,6 +15,7 @@ import re
 from aqt import gui_hooks, mw
 
 from . import chat, settings, updates, voice
+from . import theme as theme_mod
 from aqt.deckbrowser import DeckBrowserContent
 
 ADDON = os.path.basename(os.path.dirname(__file__))
@@ -90,95 +91,7 @@ DEFAULT_MOOD_FOR = {
 
 
 
-DECK_CSS = {
-    "vhs": """
-/* Anki drives its whole look from custom properties, so redefining those is
-   both cleaner and more complete than overriding rule by rule. This is what
-   finally kills the default rounded panel behind the deck table. */
-:root,:root.night-mode{{
-  --canvas:#0d0b12;
-  --canvas-glass:transparent;
-  --canvas-elevated:#151020;
-  --canvas-inset:#0d0b12;
-  --border:#3a2b52;
-  --border-subtle:#2b1f3d;
-  --border-strong:#ff2d55;
-  --fg:#cdc2e0;
-  --fg-subtle:#7d7194;
-  --fg-faint:#4b4260;
-  --fg-link:#00e5ff;
-  --state-new:#00e5ff;
-  --state-learn:#ffb200;
-  --state-review:#ff6ea1;
-  --border-radius-medium:0;
-  --border-radius:0;
-}}
-/* the table's own card would sit inside our box and read as a double frame */
-.fancy table,table{{background:transparent !important;border:0 !important;
-  box-shadow:none !important;border-radius:0 !important;padding:0 !important}}
-tr.current td,tr:hover:not(.top-level-drag-row) td{{background:rgba(255,45,85,.14) !important}}
-tr.current td:first-child{{box-shadow:inset 3px 0 0 #ff2d55}}
-tr.current a.deck{{color:#fff !important}}
-a.deck{{color:#e6dcf5}}
-.amd-deckbox{{background:#151020;border:2px solid #2b1f3d;
-  box-shadow:inset 0 0 50px rgba(255,45,85,.06)}}
-.amd-deckbox::-webkit-scrollbar-thumb{{background:#3a2b52 !important;border-radius:0 !important}}
-.amd-deckbox::-webkit-scrollbar-thumb:hover{{background:#ff2d55 !important}}
-img.gears{{filter:invert(72%) sepia(20%) hue-rotate(215deg)}}
-""",
-    "holo": """
-:root,:root.night-mode{{
-  --canvas:#080d14;
-  --canvas-glass:transparent;
-  --canvas-elevated:#0f1722;
-  --canvas-inset:#080d14;
-  --border:#22405a;
-  --border-subtle:#1d3448;
-  --border-strong:#35d6ff;
-  --fg:#9db6cc;
-  --fg-subtle:#5c7d99;
-  --fg-faint:#33495c;
-  --fg-link:#35d6ff;
-  --state-new:#35d6ff;
-  --state-learn:#ff4fd8;
-  --state-review:#7ce0b0;
-  --border-radius-medium:0;
-  --border-radius:0;
-}}
-.fancy table,table{{background:transparent !important;border:0 !important;
-  box-shadow:none !important;border-radius:0 !important;padding:0 !important}}
-tr.current td,tr:hover:not(.top-level-drag-row) td{{background:rgba(53,214,255,.13) !important}}
-tr.current td:first-child{{box-shadow:inset 3px 0 0 #35d6ff}}
-tr.current a.deck{{color:#fff !important}}
-a.deck{{color:#d9e8f7}}
-.amd-deckbox{{background:#0f1722;border:1px solid #1d3448;
-  box-shadow:inset 0 0 50px rgba(53,214,255,.05)}}
-.amd-deckbox::-webkit-scrollbar-thumb{{background:#22405a !important;border-radius:0 !important}}
-.amd-deckbox::-webkit-scrollbar-thumb:hover{{background:#35d6ff !important}}
-img.gears{{filter:invert(64%) sepia(30%) hue-rotate(160deg)}}
-""",
-}
-
-
-
-BAR_CSS = {
-    "vhs": """
-body{background:#0d0b12 !important;border-top:2px solid #2b1f3d !important}
-button{background:#151020 !important;color:#cdc2e0 !important;
-  border:1px solid #2b1f3d !important;border-radius:0 !important;
-  padding:6px 14px !important}
-button:hover{background:#241a35 !important;color:#fff !important;
-  border-color:#ff2d55 !important}
-""",
-    "holo": """
-body{background:#080d14 !important;border-top:1px solid #1d3448 !important}
-button{background:#0f1722 !important;color:#9db6cc !important;
-  border:1px solid #1d3448 !important;border-radius:0 !important;
-  padding:6px 14px !important}
-button:hover{background:#16283a !important;color:#fff !important;
-  border-color:#35d6ff !important}
-""",
-}
+# Deck, bars and panel stylesheets are generated from theme.py.
 
 
 def conf():
@@ -456,7 +369,8 @@ def build_html():
             "<img class='amd-img amd-slice' src='{u}{f}'>"
         ).format(u=base, f=first)
 
-    theme = "amd-holo" if c.get("theme") == "holo" else "amd-vhs"
+    theme = theme_mod.CLASS
+    theme_name = theme_mod.name_of(c)
     fx = "" if c.get("effects", True) else " amd-noeffects"
     width = int(c.get("panel_width") or 250)
     height = int(c.get("panel_height") or 430)
@@ -552,49 +466,7 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
   60%{{transform:translate(calc(-50% - 4px))}}100%{{transform:translateX(-50%)}}}}
 #amd-panel.amd-jolt .amd-noise{{opacity:.4}}
 
-.amd-vhs{{background:#151020;border-right:2px solid #2b1f3d}}
-.amd-vhs .amd-ghost{{mix-blend-mode:screen;opacity:.5}}
-.amd-vhs .amd-r{{filter:sepia(1) hue-rotate(-40deg) saturate(6)}}
-.amd-vhs .amd-c{{filter:sepia(1) hue-rotate(150deg) saturate(6)}}
-.amd-vhs .amd-slice{{display:none}}
-.amd-vhs #amd-say{{background:rgba(13,11,18,.9);border-top:2px solid #ff2d55;color:#f2ecff}}
-.amd-vhs #amd-stamp{{color:#ffb200}}
-.amd-card.amd-vhs{{background:#151020;border:2px solid #2b1f3d;color:#a99cc4}}
-.amd-card.amd-vhs .amd-head{{color:#ffb200;border-bottom:1px solid #2b1f3d}}
-.amd-card.amd-vhs .amd-bars i{{background:#3a2b52}}
-.amd-card.amd-vhs .amd-bars i:last-child{{background:#ff2d55}}
-.amd-card.amd-vhs textarea{{background:#0d0b12;color:#e6dcf5;border:1px solid #2b1f3d}}
-.amd-card.amd-vhs textarea:focus{{border-color:#ff2d55}}
-#amd-stats.amd-vhs{{background:#151020;border:2px solid #2b1f3d;color:#a99cc4}}
-#amd-stats.amd-vhs .amd-who{{color:#ffb200;border-bottom:1px solid #2b1f3d}}
-#amd-stats.amd-vhs .amd-line b{{color:#f2ecff}}
-#amd-stats.amd-vhs .amd-meter{{background:#241a35}}
-#amd-stats.amd-vhs .amd-meter i{{background:linear-gradient(90deg,#ff2d55,#ffb200)}}
-
-.amd-holo{{background:#0f1722;border-right:1px solid #1d3448}}
-.amd-holo .amd-base{{filter:grayscale(1) sepia(1) hue-rotate(155deg) saturate(3.4) brightness(1.1);
-  opacity:.92}}
-.amd-holo .amd-ghost{{display:none}}
-.amd-holo .amd-slice{{clip-path:inset(38% 0 46% 0);
-  filter:grayscale(1) sepia(1) hue-rotate(255deg) saturate(4) brightness(1.15);
-  animation:amdSlice 4.2s steps(1) infinite}}
-@keyframes amdSlice{{0%,72%{{transform:translateX(-50%);opacity:0}}
-  74%{{transform:translate(calc(-50% + 9px));opacity:.9}}
-  78%{{transform:translate(calc(-50% - 7px));opacity:.9}}
-  82%,100%{{transform:translateX(-50%);opacity:0}}}}
-.amd-holo #amd-say{{background:rgba(8,13,20,.88);border-top:1px solid #35d6ff;color:#d9e8f7}}
-.amd-holo #amd-stamp{{color:#35d6ff}}
-.amd-card.amd-holo{{background:#0f1722;border:1px solid #1d3448;color:#7f9cb5}}
-.amd-card.amd-holo .amd-head{{color:#35d6ff;border-bottom:1px solid #1d3448}}
-.amd-card.amd-holo .amd-bars i{{background:#22405a}}
-.amd-card.amd-holo .amd-bars i:last-child{{background:#35d6ff}}
-.amd-card.amd-holo textarea{{background:#080d14;color:#d9e8f7;border:1px solid #1d3448}}
-.amd-card.amd-holo textarea:focus{{border-color:#35d6ff}}
-#amd-stats.amd-holo{{background:#0f1722;border:1px solid #1d3448;color:#7f9cb5}}
-#amd-stats.amd-holo .amd-who{{color:#35d6ff;border-bottom:1px solid #1d3448}}
-#amd-stats.amd-holo .amd-line b{{color:#d9e8f7}}
-#amd-stats.amd-holo .amd-meter{{background:#16283a}}
-#amd-stats.amd-holo .amd-meter i{{background:linear-gradient(90deg,#35d6ff,#ff4fd8)}}
+/*__AMD_THEME__*/
 
 .amd-noeffects .amd-noise,.amd-noeffects .amd-track,
 .amd-noeffects .amd-slice,.amd-noeffects .amd-r,.amd-noeffects .amd-c{{
@@ -755,9 +627,9 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
         right = '<div class="amd-right">%s</div>' % "".join(blocks)
 
     sheet = css.format(w=width, h=height, dh=deck_h, rw=int(c.get("right_width") or 230))
+    sheet = sheet.replace("/*__AMD_THEME__*/", theme_mod.panel_css(theme_name))
     if c.get("theme_deck_list", True):
-        key = "holo" if c.get("theme") == "holo" else "vhs"
-        sheet += DECK_CSS[key].replace("{{", "{").replace("}}", "}")
+        sheet += theme_mod.deck_css(theme_name)
     return (sheet,
             markup.format(theme=theme, fx=fx, payload=payload, stats=stats_html,
                           right=right,
@@ -804,14 +676,14 @@ def on_webview_content(web_content, context) -> None:
 
     # The button bar and the top toolbar are separate webviews, which is why
     # they kept their default look while the deck page was themed.
-    key = "holo" if c.get("theme") == "holo" else "vhs"
+    bars = theme_mod.bar_css(theme_mod.name_of(c))
     if isinstance(context, aqt.deckbrowser.DeckBrowserBottomBar):
         if c.get("hide_bottom_bar", False):
             web_content.head += "<style>body{display:none !important}</style>"
         else:
-            web_content.head += "<style>%s</style>" % BAR_CSS[key]
+            web_content.head += "<style>%s</style>" % bars
     elif isinstance(context, (aqt.toolbar.TopToolbar, aqt.toolbar.BottomToolbar)):
-        web_content.head += "<style>%s</style>" % BAR_CSS[key]
+        web_content.head += "<style>%s</style>" % bars
 
 
 chat.register()

@@ -95,6 +95,19 @@ folder `character/`.
 Kalau satu state kamu hapus dari config, yang bawaan dipakai lagi. Jadi kamu
 bisa mengubah satu saja tanpa menyalin semuanya.
 
+**`theme`** — delapan pilihan: `vhs`, `holo`, `amber`, `divergence`, `paper`,
+`slate`, `sakura`, `mint`. Warnanya berlaku di layar deck, bilah atas-bawah,
+panel saat review, dan panel chat sekaligus — semuanya dari satu tabel di
+`theme.py`, jadi tidak bisa lagi ada yang tertinggal berganti.
+
+`paper` satu-satunya tema terang. Dia mematikan garis pindai sendiri: efek itu
+bekerja dengan menggelapkan, jadi di latar terang hasilnya belang kotor, bukan
+nuansa CRT.
+
+Tiap tema juga membawa gaya glitch-nya: `split` merobek potret jadi bayangan
+merah-biru seperti kaset aus, `slice` menggeser satu pita seperti proyeksi yang
+tersendat.
+
 ### Suara dan cara dialognya muncul
 
 **`typewriter`** — kalimatnya diketik huruf per huruf, bukan muncul sekaligus.

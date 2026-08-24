@@ -11,6 +11,7 @@ import json
 import random
 
 from . import voice
+from . import theme as theme_mod
 
 from aqt import gui_hooks, mw
 
@@ -80,7 +81,7 @@ def _payload(addon, pics):
         "corner": corner,
         "hide": int(c.get("reviewer_hide_seconds") or 5),
         "always": bool(c.get("reviewer_always_visible", True)),
-        "theme": "holo" if c.get("theme") == "holo" else "vhs",
+        "pal": theme_mod.palette(theme_mod.name_of(c)),
         "effects": bool(c.get("effects", True)),
         "hidden": _chat_open(),
         "voice": voice.settings(c),
@@ -117,7 +118,13 @@ __VOICE__
   window.amdRevShow = function(on){ host.style.display = on ? "" : "none"; };
 
   var root = host.attachShadow({mode: "open"});
-  var vhs = D.theme === "vhs";
+  var P = D.pal, split = P.fx === "split";
+  var thick = P.light ? "1px" : "2px";
+  function tint(hex, a){
+    var v = hex.replace("#", "");
+    return "rgba(" + parseInt(v.slice(0,2),16) + "," + parseInt(v.slice(2,4),16)
+         + "," + parseInt(v.slice(4,6),16) + "," + a + ")";
+  }
 
   // A noise tile made once and repeated. Shipping a PNG would mean another
   // file to load through the add-on's web exports for no benefit.
@@ -140,12 +147,12 @@ __VOICE__
     ":host{all:initial}" +
     ".w{position:relative;width:100%;height:100%;overflow:hidden;cursor:pointer;" +
       "font-family:system-ui,-apple-system,sans-serif;" +
-      "background:" + (vhs ? "#151020" : "#0f1722") + ";" +
-      "border:" + (vhs ? "2px solid #2b1f3d" : "1px solid #1d3448") + ";" +
+      "background:" + P.card + ";" +
+      "border:" + thick + " solid " + P.line + ";" +
       "display:flex;flex-direction:column;justify-content:flex-end}" +
     "img{position:absolute;left:50%;bottom:0;height:104%;width:auto;" +
       "max-width:none;transform:translateX(-50%);pointer-events:none}" +
-    (vhs
+    (split
       ? ".ghost{mix-blend-mode:screen;opacity:.5}" +
         ".r{filter:sepia(1) hue-rotate(-40deg) saturate(6) brightness(1.05)}" +
         ".c{filter:sepia(1) hue-rotate(150deg) saturate(6) brightness(1.05)}" +
@@ -180,9 +187,9 @@ __VOICE__
       (fx ? "animation:ro 5.5s linear infinite" : "display:none") + "}" +
     "@keyframes ro{0%{top:-50%}100%{top:110%}}" +
     ".say{position:relative;z-index:3;padding:7px 9px;font-size:12px;line-height:1.45;" +
-      "background:" + (vhs ? "rgba(13,11,18,.9)" : "rgba(8,13,20,.88)") + ";" +
-      "color:" + (vhs ? "#f2ecff" : "#d9e8f7") + ";" +
-      "border-top:" + (vhs ? "2px solid #ff2d55" : "1px solid #35d6ff") + "}" +
+      "background:" + tint(P.ground, .9) + ";" +
+      "color:" + P.ink + ";" +
+      "border-top:" + thick + " solid " + P.edge + "}" +
     ".jolt img{animation:j .3s steps(2)}" +
     ".jolt .noise{opacity:.42}" +
     "@keyframes j{0%{transform:translate(calc(-50% - 7px))}" +

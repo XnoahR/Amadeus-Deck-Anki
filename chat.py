@@ -28,6 +28,7 @@ from aqt.utils import showWarning, tooltip
 from aqt.webview import AnkiWebView
 
 from . import cardctx, chatconf, providers, voice
+from . import theme as theme_mod
 
 DOCK_NAME = "amadeusChatDock"
 # Anki keeps user_files across add-on updates, which is the whole point: a
@@ -262,19 +263,11 @@ def study_summary():
         return ""
 
 
-PALETTE = {
-    "vhs":  {"ink": "#f2ecff", "edge": "#ff2d55", "ground": "#0d0b12",
-             "card": "#141019", "line": "#2b1f3d", "dim": "#9a8fb5"},
-    "holo": {"ink": "#d9e8f7", "edge": "#35d6ff", "ground": "#080d14",
-             "card": "#0e1620", "line": "#1d3448", "dim": "#7e94aa"},
-}
-
-
 def _qss(theme):
     """The input row is Qt, not the web view, so none of the page's styling
     reaches it -- it sits under the panel in Anki's default grey looking like it
     belongs to a different program. Same six colours, applied by hand."""
-    c = PALETTE["holo" if theme == "holo" else "vhs"]
+    c = theme_mod.palette(theme)
     return """
 QWidget{background:%(ground)s;color:%(ink)s}
 QPlainTextEdit{background:%(card)s;color:%(ink)s;border:1px solid %(line)s;
@@ -300,8 +293,7 @@ QToolTip{background:%(card)s;color:%(ink)s;border:1px solid %(edge)s;padding:3px
 
 
 def _page(cfg, pics, theme):
-    vhs = theme != "holo"
-    c = PALETTE["vhs" if vhs else "holo"]
+    c = theme_mod.palette(theme)
     ink, edge, ground = c["ink"], c["edge"], c["ground"]
     card, line, dim = c["card"], c["line"], c["dim"]
     face = json.dumps({m: ["/_addons/%s/character/%s" % (chatconf.PACKAGE, n)
@@ -320,7 +312,15 @@ def _page(cfg, pics, theme):
 <style>
 html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   font-family:system-ui,-apple-system,sans-serif;font-size:13px}
-#amd-chat{display:flex;flex-direction:column;height:100vh}
+#amd-chat{display:flex;flex-direction:column;height:100vh;position:relative}
+/* Grain over the whole frame, not just the portrait: without it the panel is a
+   clean rectangle bolted onto a picture that is pretending to be a worn tape. */
+#amd-grain{position:absolute;inset:0;pointer-events:none;z-index:9;
+  opacity:%(grain)s;mix-blend-mode:%(grainmode)s;background-repeat:repeat;
+  animation:amdCrawl .7s steps(3) infinite}
+@keyframes amdCrawl{0%%{background-position:0 0}33%%{background-position:-13px 8px}
+  66%%{background-position:10px -6px}100%%{background-position:0 0}}
+@media (prefers-reduced-motion:reduce){#amd-grain{animation:none}}
 #amd-face{position:relative;height:%(faceh)dpx;flex:none;overflow:hidden;
   border-bottom:2px solid %(edge)s;background:#000}
 #amd-face img{position:absolute;left:50%%;bottom:0;height:112%%;width:auto;
@@ -354,6 +354,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 #amd-meter b{font-weight:600;font-variant-numeric:tabular-nums;color:%(ink)s}
 </style>
 <div id="amd-chat">
+  <div id="amd-grain"></div>
   <div id="amd-face"><img id="amd-img"><div id="amd-scan"></div></div>
   <div id="amd-log"></div>
   <div id="amd-meter" title=""><span>konteks</span>
@@ -367,6 +368,19 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   var log=document.getElementById("amd-log"), img=document.getElementById("amd-img");
   var status=document.getElementById("amd-status");
   var VC=%(vconf)s;
+  // A tile made once and repeated. Shipping a PNG would mean another file
+  // routed through the add-on's web exports for no benefit.
+  if (%(grainon)s){
+    var N=64, cv=document.createElement("canvas"); cv.width=cv.height=N;
+    var cx=cv.getContext("2d"), id=cx.createImageData(N,N);
+    for(var i=0;i<id.data.length;i+=4){
+      var v=(Math.random()*255)|0;
+      id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=255;
+    }
+    cx.putImageData(id,0,0);
+    document.getElementById("amd-grain").style.backgroundImage=
+      "url("+cv.toDataURL("image/png")+")";
+  }
 
   function pick(a){return a[(Math.random()*a.length)|0]}
   // The whole ordered list, not one at random: the three pictures behind an
@@ -445,7 +459,12 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
        "faceh": max(90, min(int(cfg.get("chat_face_height") or 220), 600)),
        "zoom": max(100, min(int(cfg.get("chat_thumb_zoom") or 240), 800)),
        "thumby": max(0, min(int(cfg.get("chat_thumb_y") or 20), 100)),
-       "thumbmood": "true" if cfg.get("chat_thumb_expression", True) else "false"}
+       "thumbmood": "true" if cfg.get("chat_thumb_expression", True) else "false",
+       # Grain darkens as much as it lightens; on a pale ground "overlay" turns
+       # to dirt, so a light theme gets the gentler blend and less of it.
+       "grain": "0.07" if c["light"] else "0.15",
+       "grainmode": "multiply" if c["light"] else "overlay",
+       "grainon": "true" if cfg.get("effects", True) else "false"}
 
 
 def measure(cfg, turns, summary=""):
@@ -528,14 +547,14 @@ class ChatDock(QDockWidget):
 
         cfg = chatconf.load()
         pics = pictures()
-        theme = (mw.addonManager.getConfig(chatconf.PACKAGE) or {}).get("theme", "vhs")
+        theme = theme_mod.name_of(mw.addonManager.getConfig(chatconf.PACKAGE) or {})
         self.setWindowTitle(chatconf.who(cfg)[0])
         self.setStyleSheet(_qss(theme))
         pal = self.input.palette()
         # Qt style sheets cannot reach the placeholder on a QPlainTextEdit, so
         # it stays black-on-dark unless the palette role is set directly.
         pal.setColor(QPalette.ColorRole.PlaceholderText,
-                     QColor(PALETTE["holo" if theme == "holo" else "vhs"]["dim"]))
+                     QColor(theme_mod.palette(theme)["dim"]))
         self.input.setPalette(pal)
         self.web.stdHtml(_page(cfg, pics, theme), css=[], js=[],
                          context=self, default_css=False)

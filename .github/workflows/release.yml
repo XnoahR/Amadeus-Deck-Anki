@@ -45,8 +45,7 @@ jobs:
         run: |
           mkdir -p dist
           zip -q -r dist/AmadeusDeck.ankiaddon \
-            __init__.py reviewer.py voice.py updates.py check_character.py \
-            chat.py chatconf.py providers.py cardctx.py settings.py \
+            *.py \
             config.json config.md manifest.json LICENSE character/README.txt \
             guide/apikey.html
           unzip -l dist/AmadeusDeck.ankiaddon

@@ -123,8 +123,7 @@ def on_update_json(text, addon):
 # (key, label, kind, *args). Order here is the order on screen.
 TABS: list[tuple[str, list[tuple]]] = [
     ("Tampilan", [
-        ("theme", "Tema", "choice",
-         [("vhs", "VHS retro"), ("holo", "Holo biru")]),
+        ("theme", "Tema", "choice", None),
         ("daily_target", "Target kartu per hari", "int", 10, 5000),
         ("theme_deck_list", "Ikut mewarnai daftar deck", "bool"),
         ("theme_bars", "Ikut mewarnai bilah atas & bawah", "bool"),
@@ -266,7 +265,13 @@ class Settings(QDialog):
             return w
         if kind == "choice":
             w = QComboBox(self)
-            for real, shown in args[0]:
+            # None means "ask the theme table", so a new theme never needs a
+            # second list here to be remembered.
+            options = args[0]
+            if options is None:
+                from . import theme as theme_mod
+                options = theme_mod.choices()
+            for real, shown in options:
                 w.addItem(shown, real)
             index = w.findData(value)
             w.setCurrentIndex(max(0, index))
