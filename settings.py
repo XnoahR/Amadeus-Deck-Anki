@@ -53,7 +53,8 @@ GROUPS: list[tuple[str, list[str]]] = [
     ("AI / CHAT",
      ["character_name", "user_name", "chat_enabled", "chat_shortcut", "chat_width", "chat_face_height", "chat_thumb_expression", "chat_thumb_zoom", "chat_thumb_y",
       "active_provider", "providers", "persona", "about_you",
-      "remember_chat", "remember_messages", "send_study_context",
+      "remember_chat", "remember_messages", "compact_history",
+      "send_study_context",
       "send_card_context", "max_context_chars", "max_history_turns",
       "max_tokens", "timeout_seconds"]),
     ("KALIMAT & EKSPRESI",
@@ -171,6 +172,9 @@ TABS: list[tuple[str, list[tuple]]] = [
         ("persona", "Siapa dia (persona) - {name} dan {user} akan diganti", "longtext"),
         ("about_you", "Yang perlu dia ingat tentang kamu", "longtext"),
         ("remember_chat", "Ingat percakapan setelah Anki ditutup", "bool"),
+        ("compact_history",
+         "Ringkas percakapan lama, jangan dibuang (butuh 1 permintaan tambahan)",
+         "bool"),
         ("send_study_context", "Beri tahu dia angka belajarmu hari ini", "bool"),
         ("send_card_context", "Beri tahu dia kartu yang sedang terbuka", "bool"),
     ]),
@@ -312,6 +316,13 @@ class Settings(QDialog):
         self.p_name = QLineEdit(self)
         self.p_model = QLineEdit(self)
         self.p_url = QLineEdit(self)
+        self.p_window = QSpinBox(self)
+        self.p_window.setRange(0, 4000000)
+        self.p_window.setSingleStep(1024)
+        self.p_window.setSpecialValueText("belum diisi")
+        self.p_window.setToolTip(
+            "Jendela konteks model, dipakai untuk meteran di panel chat. "
+            "Biarkan 0 kalau tidak tahu.")
         self.p_key = QLineEdit(self)
         self.p_key.setEchoMode(QLineEdit.EchoMode.Password)
         show = QPushButton("Lihat", self)
@@ -332,6 +343,7 @@ class Settings(QDialog):
         form.addRow("Nama:", self.p_name)
         form.addRow("Model:", self.p_model)
         form.addRow("Alamat API:", self.p_url)
+        form.addRow("Jendela konteks:", self.p_window)
         form.addRow("API key:", keyrow)
 
         self._refill_picker()
@@ -371,6 +383,11 @@ class Settings(QDialog):
                             (self.p_url, "base_url"), (self.p_key, "api_key")):
             widget.setText(str(entry.get(key) or ""))
             widget.setEnabled(not blank)
+        try:
+            self.p_window.setValue(int(entry.get("context_window") or 0))
+        except (TypeError, ValueError):
+            self.p_window.setValue(0)
+        self.p_window.setEnabled(not blank)
 
     def _stash_provider(self):
         """Fold what is on screen back into the list, so switching entries does
@@ -382,6 +399,7 @@ class Settings(QDialog):
         entry["model"] = self.p_model.text().strip()
         entry["base_url"] = self.p_url.text().strip()
         entry["api_key"] = self.p_key.text().strip()
+        entry["context_window"] = self.p_window.value()
         entry.setdefault("kind", "openai")
 
     def _switch_provider(self, index):

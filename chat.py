@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import threading
 from typing import Any
 
@@ -34,6 +35,23 @@ DOCK_NAME = "amadeusChatDock"
 # know you.
 STORE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                      "user_files", "chat.json")
+SUMMARY = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       "user_files", "chat-summary.txt")
+
+
+# Japanese runs about one token per character; Latin script about a quarter of
+# that. One ratio for both would be wrong by 4x on a mixed conversation, which
+# is exactly what this add-on has.
+_CJK = re.compile(r"[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]")
+
+
+def estimate_tokens(text):
+    """Close enough to size a bar with. Nobody here needs the exact number, and
+    getting it exactly would mean shipping a tokeniser per model."""
+    if not text:
+        return 0
+    cjk = len(_CJK.findall(text))
+    return int(cjk + (len(text) - cjk) / 3.6) + 1
 
 
 class ThoughtFilter:
@@ -196,8 +214,26 @@ def save_turns(turns, keep):
 
 
 def forget_turns():
+    for path in (STORE, SUMMARY):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
+
+def load_summary():
     try:
-        os.remove(STORE)
+        with open(SUMMARY, encoding="utf-8") as fh:
+            return fh.read().strip()
+    except OSError:
+        return ""
+
+
+def save_summary(text):
+    try:
+        os.makedirs(os.path.dirname(SUMMARY), exist_ok=True)
+        with open(SUMMARY, "w", encoding="utf-8") as fh:
+            fh.write((text or "").strip())
     except OSError:
         pass
 
@@ -308,10 +344,20 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 .amd-turn.me span{display:inline-block;max-width:78%%;text-align:left;
   color:%(dim)s;border:1px dashed %(line)s;padding:6px 10px;white-space:pre-wrap}
 #amd-status{flex:none;padding:5px 11px;font-size:11px;color:%(dim)s;min-height:16px}
+#amd-meter{flex:none;display:flex;align-items:center;gap:8px;padding:6px 11px 0;
+  font-size:10.5px;color:%(dim)s;cursor:default}
+#amd-bar{flex:1;height:3px;background:%(line)s;position:relative;overflow:hidden}
+#amd-bar i{position:absolute;inset:0 auto 0 0;width:0;background:%(edge)s;
+  transition:width .3s linear}
+#amd-meter.warm #amd-bar i{background:#ffb200}
+#amd-meter.hot #amd-bar i{background:#ff3b30}
+#amd-meter b{font-weight:600;font-variant-numeric:tabular-nums;color:%(ink)s}
 </style>
 <div id="amd-chat">
   <div id="amd-face"><img id="amd-img"><div id="amd-scan"></div></div>
   <div id="amd-log"></div>
+  <div id="amd-meter" title=""><span>konteks</span>
+    <div id="amd-bar"><i></i></div><b></b></div>
   <div id="amd-status"></div>
 </div>
 <script>
@@ -371,6 +417,19 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
       bottom();
     },
     status:function(t){status.textContent=t||""},
+    context:function(d){
+      var m=document.getElementById("amd-meter");
+      var bar=m.querySelector("i"), num=m.querySelector("b");
+      var pct=d.window?Math.min(100,d.total/d.window*100):0;
+      bar.style.width=pct+"%";
+      m.classList.toggle("warm",pct>=60&&pct<85);
+      m.classList.toggle("hot",pct>=85);
+      num.textContent=d.window
+        ? d.total.toLocaleString("id")+" / "+d.window.toLocaleString("id")
+          +"  ("+(pct<0.1?"<0,1":pct.toFixed(1).replace(".",","))+"%)"
+        : "~"+d.total.toLocaleString("id")+" token";
+      m.title=d.detail||"";
+    },
     clear:function(){log.innerHTML="";status.textContent="";live=null;liveThumb=null}
   };
   log.addEventListener("click",function(){V.wake();V.skip()});
@@ -387,6 +446,24 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
        "zoom": max(100, min(int(cfg.get("chat_thumb_zoom") or 240), 800)),
        "thumby": max(0, min(int(cfg.get("chat_thumb_y") or 20), 100)),
        "thumbmood": "true" if cfg.get("chat_thumb_expression", True) else "false"}
+
+
+def measure(cfg, turns, summary=""):
+    """What the next request will roughly weigh, broken up so the panel can say
+    where the weight is rather than just that there is some."""
+    system = chatconf.system_prompt(
+        cfg, study_summary() if cfg["send_study_context"] else "", summary)
+    keep = max(0, int(cfg["max_history_turns"])) * 2
+    history = turns[-keep:] if keep else []
+    parts = {
+        "system": estimate_tokens(system),
+        "riwayat": sum(estimate_tokens(t.get("content", "")) for t in history),
+        "kartu": estimate_tokens("x" * int(cfg["max_context_chars"]))
+                 if cfg["send_card_context"] else 0,
+    }
+    parts["total"] = sum(parts.values())
+    parts["pesan"] = len(history)
+    return parts
 
 
 class ChatDock(QDockWidget):
@@ -472,6 +549,7 @@ class ChatDock(QDockWidget):
             for turn in self._turns[-int(cfg["remember_messages"]):]:
                 self._say("past", turn["role"], turn["content"],
                           turn.get("mood") or "normal")
+        self._update_meter(cfg)
 
     def _eval(self, js):
         try:
@@ -483,13 +561,95 @@ class ChatDock(QDockWidget):
         self._eval("window.amdChat && amdChat.%s(%s)"
                    % (fn, ",".join(json.dumps(a) for a in args)))
 
+    def _update_meter(self, cfg=None):
+        cfg = cfg or chatconf.load()
+        provider = chatconf.active_provider(cfg) or {}
+        try:
+            window = max(0, int(provider.get("context_window") or 0))
+        except (TypeError, ValueError):
+            window = 0
+        parts = measure(cfg, self._turns, self._summary)
+        detail = ("system %d  ·  riwayat %d (%d pesan)  ·  kartu %d"
+                  % (parts["system"], parts["riwayat"], parts["pesan"],
+                     parts["kartu"]))
+        if self._summary:
+            detail += "  ·  ringkasan aktif"
+        if not window:
+            detail += "\nJendela model belum diisi (context_window di config)."
+        self._say("context", {"total": parts["total"], "window": window,
+                              "detail": detail})
+
     def _on_js(self, message):
         if message == "amd_chat_poke":
             self._say("mood", "happy")
         return False
 
+    def _compact(self, cfg):
+        """Fold the turns that are about to fall out of the window into a few
+        sentences, instead of letting them vanish.
+
+        Trimming by count is lossless right up until it is not: the twenty-first
+        message back is simply gone, and she has no idea it existed. This costs
+        one extra request, runs after the reply rather than in front of it, and
+        never blocks anyone.
+        """
+        if self._busy or self._compacting:
+            return
+        keep = max(0, int(cfg["max_history_turns"])) * 2
+        if not keep or len(self._turns) <= keep + 4:
+            return
+        dropping = self._turns[:-keep]
+        provider = chatconf.active_provider(cfg)
+        if provider is None:
+            return
+        try:
+            key = chatconf.resolve_api_key(provider)
+        except chatconf.KeyLookupError:
+            return
+        if not key:
+            return
+
+        talk = "\n".join("%s: %s" % ("Dia" if t["role"] == "user" else "Kamu",
+                                      t["content"]) for t in dropping)
+        ask = ("Ringkas percakapan berikut jadi paling banyak 3 kalimat, dalam "
+               "bahasa yang sama. Simpan hanya yang berguna diingat nanti: "
+               "keputusan, kebiasaan, dan hal yang dia sebut tentang dirinya. "
+               "Buang basa-basi. Tulis ringkasannya saja.")
+        if self._summary:
+            ask += "\n\nRingkasan yang sudah ada, gabungkan:\n" + self._summary
+        chunks = []
+        self._compacting = True
+
+        def work():
+            providers.stream_completion(
+                provider, key, ask, [{"role": "user", "content": talk}],
+                max_tokens=300, timeout=int(cfg["timeout_seconds"]),
+                on_text=chunks.append, on_status=lambda _c: None,
+                should_stop=lambda: False)
+
+        def done(future):
+            self._compacting = False
+            try:
+                future.result()
+            except Exception:
+                return          # keep the turns; try again next time
+            filt = ThoughtFilter()
+            text = (filt.feed("".join(chunks)) + filt.flush()).strip()
+            if not text:
+                return
+            self._summary = text
+            save_summary(text)
+            self._turns = self._turns[-keep:]
+            if cfg["remember_chat"]:
+                save_turns(self._turns, cfg["remember_messages"])
+            self._update_meter(cfg)
+            tooltip("Percakapan lama diringkas.", period=4000)
+
+        mw.taskman.run_in_background(work, done)
+
     def _forget(self):
         self._turns = []
+        self._summary = ""
         forget_turns()
         self._say("clear")
         tooltip("Percakapan dilupakan.")
@@ -535,7 +695,8 @@ class ChatDock(QDockWidget):
 
         her = chatconf.who(cfg)[0]
         system = chatconf.system_prompt(
-            cfg, study_summary() if cfg["send_study_context"] else "")
+            cfg, study_summary() if cfg["send_study_context"] else "",
+            self._summary)
         messages = self._history(cfg, text)
 
         self._busy = True
@@ -623,6 +784,9 @@ class ChatDock(QDockWidget):
         cfg = chatconf.load()
         if cfg["remember_chat"]:
             save_turns(self._turns, cfg["remember_messages"])
+        self._update_meter(cfg)
+        if cfg.get("compact_history"):
+            self._compact(cfg)
 
     def _history(self, cfg, text):
         out = []

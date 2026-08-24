@@ -170,6 +170,11 @@ personanya digabungkan ke pesan pertamamu. Bawaannya mati — Gemma lewat
 endpoint OpenAI-compatible Google ternyata menerima system instruction dengan
 baik, jadi ini cuma jaring pengaman kalau kamu menemukan model yang tidak.
 
+Ada juga **`context_window`** per provider: jendela konteks modelnya, dipakai
+untuk meteran kecil di bawah panel chat. Isi `0` kalau tidak tahu — meterannya
+tetap menunjukkan perkiraan token, cuma tanpa persentase. Arahkan kursor ke
+meterannya untuk melihat rinciannya.
+
 **`active_provider`** — nama entri yang dipakai. Bisa juga diganti lewat
 dropdown di panelnya.
 
@@ -196,6 +201,12 @@ percakapan berikutnya selamanya.
 sebagai JSON biasa di `user_files/chat.json`: memory yang tidak bisa kamu buka
 dan baca adalah memory yang tidak bisa kamu betulkan. Tombol **Lupakan** di
 panel chat menghapusnya.
+
+**`compact_history`** — waktu percakapan melewati `max_history_turns`, yang
+lama **diringkas** jadi beberapa kalimat, bukan dibuang. Ringkasannya masuk ke
+system prompt dan tersimpan di `user_files/chat-summary.txt` supaya bisa kamu
+baca dan hapus. Biayanya satu permintaan tambahan, dijalankan **setelah** dia
+menjawab, jadi tidak pernah membuatmu menunggu.
 
 **`remember_messages`** — berapa pesan terakhir yang disimpan. Bawaan `24`.
 Ingat, semua yang dia ingat ikut dikirim ke model tiap giliran.

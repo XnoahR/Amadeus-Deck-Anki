@@ -67,6 +67,7 @@ PROVIDER_FIELDS: dict[str, Any] = {
     "effort": "",
     "thinking": "default",
     "max_tokens": 0,
+    "context_window": 0,
     "system_in_user": False,
     "extra_headers": {},
 }
@@ -98,6 +99,7 @@ DEFAULTS: dict[str, Any] = {
     "about_you": "",
     "remember_chat": True,
     "remember_messages": 24,
+    "compact_history": False,
     "send_study_context": True,
     "send_card_context": True,
     "max_context_chars": 900,
@@ -235,7 +237,8 @@ def fill(text: str, **names) -> str:
     return out
 
 
-def system_prompt(cfg: dict[str, Any], study: str = "") -> str:
+def system_prompt(cfg: dict[str, Any], study: str = "",
+                  summary: str = "") -> str:
     """Persona, then how to signal a face, then today's figures.
 
     The numbers go in the system prompt rather than the user's message so she
@@ -253,6 +256,11 @@ def system_prompt(cfg: dict[str, Any], study: str = "") -> str:
         # not, because a wrong guess would then outlive the conversation.
         parts.append("Yang perlu kamu ingat tentang %s:\n%s"
                      % (you, fill(about, name=her, user=you).strip()))
+    if summary:
+        # What was said before the surviving turns. Kept in the system prompt
+        # rather than faked as a message, so it never reads as something one of
+        # you actually said.
+        parts.append("Ringkasan percakapan sebelumnya:\n" + summary.strip())
     if study:
         parts.append("Keadaan belajarnya hari ini:\n" + study)
     return "\n\n".join(parts)
