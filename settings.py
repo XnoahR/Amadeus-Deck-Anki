@@ -554,7 +554,15 @@ def open_guide():
     if not os.path.exists(GUIDE):
         showInfo("Panduannya tidak ketemu di:\n%s" % GUIDE)
         return
-    QDesktopServices.openUrl(QUrl.fromLocalFile(GUIDE))
+    url = QUrl.fromLocalFile(GUIDE)
+    # The path never changes, so a browser that has opened this once will keep
+    # serving its cached copy -- and an updated guide looks like an add-on that
+    # did not update. Stamping the file's mtime makes each version its own URL.
+    try:
+        url.setQuery("v=%d" % int(os.path.getmtime(GUIDE)))
+    except OSError:
+        pass
+    QDesktopServices.openUrl(url)
 
 
 _raw_holder = None
