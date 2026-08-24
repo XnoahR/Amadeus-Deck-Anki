@@ -101,11 +101,11 @@
       <td><code>https://generativelanguage.googleapis.com/v1beta/openai</code></td></tr>
   </table>
   <div class="note">
-    <p style="margin:0">Model Gemma di Google <b>tidak menerima system
-      instruction</b>, padahal seluruh kepribadian Amadeus tinggal di sana.
-      Add-on ini sudah menanganinya: untuk provider ini, personanya digabungkan
-      ke pesan pertamamu. Kalau kamu menambah provider Gemma sendiri lewat
-      config lanjutan, nyalakan <code>system_in_user</code>.</p>
+    <p style="margin:0">Model ini menarasikan penalarannya sebelum menjawab.
+      Add-on ini membuangnya, jadi yang kamu lihat cuma jawabannya. Kalau suatu
+      saat kamu memakai model yang menolak <i>system instruction</i>, ada
+      <code>system_in_user</code> di config lanjutan — personanya digabungkan
+      ke pesan pertamamu.</p>
   </div>
 
   <h2>Pilihan 3 — OpenRouter</h2>
@@ -212,11 +212,11 @@
       <td><code>https://generativelanguage.googleapis.com/v1beta/openai</code></td></tr>
   </table>
   <div class="note">
-    <p style="margin:0">Google's Gemma models <b>do not accept a system
-      instruction</b>, and Amadeus keeps her whole personality in one. The
-      add-on handles it: for this provider the persona is folded into your first
-      message instead. If you add a Gemma provider yourself in the advanced
-      config, switch on <code>system_in_user</code>.</p>
+    <p style="margin:0">This model narrates its reasoning before answering. The
+      add-on strips that, so you only see the reply. If you ever use a model
+      that refuses a <i>system instruction</i>, the advanced config has
+      <code>system_in_user</code> — it folds the persona into your first message
+      instead.</p>
   </div>
 
   <h2>Option 3 — OpenRouter</h2>

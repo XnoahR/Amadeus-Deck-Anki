@@ -54,8 +54,7 @@
       "kind": "openai",
       "model": "gemma-4-31b-it",
       "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "api_key": "",
-      "system_in_user": true
+      "api_key": ""
     },
     {
       "name": "OpenRouter",
