@@ -171,7 +171,7 @@ Matikan kalau tidak mau add-on ini menghubungi internet sama sekali.
 
 ### Chat
 
-Dia bisa diajak bicara: **Tools → Amadeus: buka chat** (atau `Ctrl+Shift+M`).
+Dia bisa diajak bicara: **Tools → Amadeus Deck → Buka chat** (atau `Ctrl+Shift+M`).
 Jawabannya diketik dengan suara 8-bit yang sama, dan potretnya berganti ikut
 nada jawabannya.
 
