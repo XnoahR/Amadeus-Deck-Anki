@@ -20,8 +20,8 @@ from typing import Any
 
 from aqt import gui_hooks, mw
 from aqt.qt import (
-    QComboBox, QDockWidget, QKeySequence, QHBoxLayout, QPlainTextEdit,
-    QPushButton, QShortcut, QSize, Qt, QVBoxLayout, QWidget,
+    QColor, QComboBox, QDockWidget, QKeySequence, QHBoxLayout, QPalette,
+    QPlainTextEdit, QPushButton, QShortcut, QSize, Qt, QVBoxLayout, QWidget,
 )
 from aqt.utils import showWarning, tooltip
 from aqt.webview import AnkiWebView
@@ -158,13 +158,48 @@ def study_summary():
         return ""
 
 
+PALETTE = {
+    "vhs":  {"ink": "#f2ecff", "edge": "#ff2d55", "ground": "#0d0b12",
+             "card": "#141019", "line": "#2b1f3d", "dim": "#9a8fb5"},
+    "holo": {"ink": "#d9e8f7", "edge": "#35d6ff", "ground": "#080d14",
+             "card": "#0e1620", "line": "#1d3448", "dim": "#7e94aa"},
+}
+
+
+def _qss(theme):
+    """The input row is Qt, not the web view, so none of the page's styling
+    reaches it -- it sits under the panel in Anki's default grey looking like it
+    belongs to a different program. Same six colours, applied by hand."""
+    c = PALETTE["holo" if theme == "holo" else "vhs"]
+    return """
+QWidget{background:%(ground)s;color:%(ink)s}
+QPlainTextEdit{background:%(card)s;color:%(ink)s;border:1px solid %(line)s;
+  border-left:2px solid %(edge)s;padding:6px 8px;selection-background-color:%(edge)s;
+  selection-color:%(ground)s}
+QPlainTextEdit:focus{border-color:%(edge)s}
+QPushButton{background:%(card)s;color:%(ink)s;border:1px solid %(line)s;
+  padding:5px 13px;font-size:12px}
+QPushButton:hover{border-color:%(edge)s;color:%(edge)s}
+QPushButton:pressed{background:%(edge)s;color:%(ground)s}
+QComboBox{background:%(card)s;color:%(ink)s;border:1px solid %(line)s;
+  padding:4px 8px;font-size:12px}
+QComboBox:hover{border-color:%(edge)s}
+QComboBox::drop-down{border:0;width:18px}
+QComboBox::down-arrow{image:none;border-left:4px solid transparent;
+  border-right:4px solid transparent;border-top:5px solid %(dim)s;
+  width:0;height:0;margin-right:6px}
+QComboBox QAbstractItemView{background:%(card)s;color:%(ink)s;
+  border:1px solid %(line)s;selection-background-color:%(edge)s;
+  selection-color:%(ground)s;outline:0}
+QToolTip{background:%(card)s;color:%(ink)s;border:1px solid %(edge)s;padding:3px}
+""" % c
+
+
 def _page(cfg, pics, theme):
     vhs = theme != "holo"
-    ink, edge = ("#f2ecff", "#ff2d55") if vhs else ("#d9e8f7", "#35d6ff")
-    ground = "#0d0b12" if vhs else "#080d14"
-    card = "#141019" if vhs else "#0e1620"
-    line = "#2b1f3d" if vhs else "#1d3448"
-    dim = "#9a8fb5" if vhs else "#7e94aa"
+    c = PALETTE["vhs" if vhs else "holo"]
+    ink, edge, ground = c["ink"], c["edge"], c["ground"]
+    card, line, dim = c["card"], c["line"], c["dim"]
     face = json.dumps({m: ["/_addons/%s/character/%s" % (chatconf.PACKAGE, n)
                            for n in v] for m, v in pics.items()})
     # The reviewer speaks a different mood vocabulary (good/wrong/pissed) from
@@ -347,6 +382,13 @@ class ChatDock(QDockWidget):
         pics = pictures()
         theme = (mw.addonManager.getConfig(chatconf.PACKAGE) or {}).get("theme", "vhs")
         self.setWindowTitle(chatconf.who(cfg)[0])
+        self.setStyleSheet(_qss(theme))
+        pal = self.input.palette()
+        # Qt style sheets cannot reach the placeholder on a QPlainTextEdit, so
+        # it stays black-on-dark unless the palette role is set directly.
+        pal.setColor(QPalette.ColorRole.PlaceholderText,
+                     QColor(PALETTE["holo" if theme == "holo" else "vhs"]["dim"]))
+        self.input.setPalette(pal)
         self.web.stdHtml(_page(cfg, pics, theme), css=[], js=[],
                          context=self, default_css=False)
         names = chatconf.provider_names(cfg)
