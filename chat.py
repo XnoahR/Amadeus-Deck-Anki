@@ -483,6 +483,8 @@ class ChatDock(QDockWidget):
         self._thoughts = ThoughtFilter()
         self._mood = "normal"
         self._moods: Any = {}
+        self._summary = load_summary()
+        self._compacting = False
 
         box = QWidget(self)
         lay = QVBoxLayout(box)
