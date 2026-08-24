@@ -23,7 +23,8 @@ from aqt import mw
 from aqt.qt import (
     QCheckBox, QComboBox, QDesktopServices, QDialog, QDialogButtonBox,
     QDoubleSpinBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit,
-    QPushButton, QSpinBox, QTabWidget, QUrl, QVBoxLayout, QWidget, Qt,
+    QPushButton, QScrollArea, QSpinBox, QTabWidget, QUrl, QVBoxLayout, QWidget,
+    Qt,
 )
 from aqt.utils import askUser, showInfo, tooltip
 
@@ -197,6 +198,14 @@ class Settings(QDialog):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Amadeus Deck - Pengaturan")
         self.setMinimumWidth(520)
+        # Never taller than the screen it opens on. A dialog that is is a dialog
+        # whose buttons are somewhere below the taskbar.
+        try:
+            avail = self.screen().availableGeometry()
+            self.setMaximumHeight(max(360, avail.height() - 80))
+            self.resize(560, min(760, avail.height() - 120))
+        except Exception:
+            self.resize(560, 700)
         self.raw: dict[str, Any] = mw.addonManager.getConfig(PACKAGE) or {}
         self.widgets: dict[str, Any] = {}
 
@@ -223,6 +232,13 @@ class Settings(QDialog):
     # -------------------------------------------------------------- building
 
     def _tab(self, fields):
+        """Each tab scrolls on its own.
+
+        The Chat tab is taller than a 768px laptop screen, and the buttons live
+        under the tabs -- so on a short screen the dialog grew past the bottom
+        and Save went with it. Nothing on the page could be reached to fix it,
+        because the fix was the button that had gone.
+        """
         page = QWidget(self)
         form = QFormLayout(page)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
@@ -241,7 +257,13 @@ class Settings(QDialog):
                 form.addRow(widget)
             else:
                 form.addRow(label + ":", widget)
-        return page
+
+        area = QScrollArea(self)
+        area.setWidget(page)
+        area.setWidgetResizable(True)
+        area.setFrameShape(QScrollArea.Shape.NoFrame)
+        area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        return area
 
     def _widget(self, key, kind, args):
         value = self.raw.get(key)
