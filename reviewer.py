@@ -82,6 +82,7 @@ def _payload(addon, pics):
         "hide": int(c.get("reviewer_hide_seconds") or 5),
         "always": bool(c.get("reviewer_always_visible", True)),
         "pal": theme_mod.palette(theme_mod.name_of(c)),
+        "rot": theme_mod.rotations(theme_mod.name_of(c)),
         "effects": bool(c.get("effects", True)),
         "hidden": _chat_open(),
         "voice": voice.settings(c),
@@ -159,10 +160,10 @@ __VOICE__
         ".slice{display:none}" +
         (fx ? ".r{animation:sr 3.7s steps(1) infinite}" +
               ".c{animation:sc 3.7s steps(1) infinite}" : "")
-      : ".base{filter:grayscale(1) sepia(1) hue-rotate(155deg) saturate(3.4) brightness(1.1);opacity:.92}" +
+      : ".base{filter:grayscale(1) sepia(1) hue-rotate(" + D.rot[0] + "deg) saturate(3.4) brightness(1.1);opacity:.92}" +
         ".ghost{display:none}" +
         ".slice{clip-path:inset(38% 0 46% 0);" +
-          "filter:grayscale(1) sepia(1) hue-rotate(255deg) saturate(4) brightness(1.15);opacity:0}" +
+          "filter:grayscale(1) sepia(1) hue-rotate(" + D.rot[1] + "deg) saturate(4) brightness(1.15);opacity:0}" +
         (fx ? ".slice{animation:sl 4.2s steps(1) infinite}" : "")) +
     "@keyframes sr{0%,88%{transform:translateX(-50%)}" +
       "90%{transform:translate(calc(-50% - 5px))}" +

@@ -218,7 +218,7 @@ def panel_css(name: str) -> str:
   74%{{{{transform:translate(calc(-50% + 9px));opacity:.9}}}}
   78%{{{{transform:translate(calc(-50% - 7px));opacity:.9}}}}
   82%,100%{{{{transform:translateX(-50%);opacity:0}}}}}}}}
-""".format(k=CLASS, hue=_hue(p["edge"]), hue2=(_hue(p["edge"]) + 100) % 360)
+""".format(k=CLASS, hue=rotations(name)[0], hue2=rotations(name)[1])
 
     return (glitch + """
 .{k}{{{{background:{{card}};border-right:{t} solid {{line}}}}}}
@@ -238,6 +238,19 @@ def panel_css(name: str) -> str:
 #amd-stats.{k} .amd-meter i{{{{background:linear-gradient(90deg,{{edge}},{{learn}})}}}}
 """.format(k=CLASS, t=thick)).format(
         saybg=rgba(p["ground"], .9), meter=rgba(p["edge"], .16), **p)
+
+
+# sepia(1) lands the image around this hue before hue-rotate is applied, so a
+# rotation has to be measured from here rather than from zero. Getting this
+# wrong tints every slice theme 35 degrees off its own accent.
+SEPIA_BASE = 35
+
+
+def rotations(name: str) -> tuple[int, int]:
+    """How far to turn a sepia-converted portrait to reach the theme's accent,
+    and the offset used for the sliced band."""
+    base = (_hue(palette(name)["edge"]) - SEPIA_BASE) % 360
+    return base, (base + 110) % 360
 
 
 def _hue(hex_colour: str) -> int:
