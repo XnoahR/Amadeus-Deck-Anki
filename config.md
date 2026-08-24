@@ -125,7 +125,7 @@ musik, jadi jangan besar-besar.
 **`dialog_pitch`** — nada dasar dalam Hz. Bawaan `440`. Naikkan untuk suara
 yang lebih tinggi/imut, turunkan untuk yang lebih berat.
 
-**`grain_opacity`** — kekuatan butiran di panel chat, `0` sampai `1`. Bawaan
+**`grain_opacity`** — kekuatan butiran di bingkai potret panel chat, `0` sampai `1`. Bawaan
 `0.45`. Isi `0` untuk mematikannya tanpa mematikan efek yang lain. Di atas
 `0.6` pola ubinnya mulai terlihat sebagai corak, bukan butiran.
 

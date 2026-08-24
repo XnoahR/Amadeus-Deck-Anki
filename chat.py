@@ -313,14 +313,10 @@ def _page(cfg, pics, theme):
 html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   font-family:system-ui,-apple-system,sans-serif;font-size:13px}
 #amd-chat{display:flex;flex-direction:column;height:100vh;position:relative}
-/* Grain over the whole frame, not just the portrait: without it the panel is a
-   clean rectangle bolted onto a picture that is pretending to be a worn tape. */
-#amd-grain{position:absolute;inset:0;pointer-events:none;z-index:9;
-  opacity:%(grain)s;background-repeat:repeat;
-  animation:amdCrawl .7s steps(3) infinite}
-@keyframes amdCrawl{0%%{background-position:0 0}33%%{background-position:-13px 8px}
-  66%%{background-position:10px -6px}100%%{background-position:0 0}}
-@media (prefers-reduced-motion:reduce){#amd-grain{animation:none}}
+/* Grain belongs to the picture, not to the page. Over the message log it is
+   just something between you and the words you are reading. */
+#amd-grain{position:absolute;inset:0;pointer-events:none;z-index:2;
+  opacity:%(grain)s;background-repeat:repeat}
 #amd-face{position:relative;height:%(faceh)dpx;flex:none;overflow:hidden;
   border-bottom:2px solid %(edge)s;background:#000}
 #amd-face img{position:absolute;left:50%%;bottom:0;height:112%%;width:auto;
@@ -354,8 +350,8 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 #amd-meter b{font-weight:600;font-variant-numeric:tabular-nums;color:%(ink)s}
 </style>
 <div id="amd-chat">
-  <div id="amd-grain"></div>
-  <div id="amd-face"><img id="amd-img"><div id="amd-scan"></div></div>
+  <div id="amd-face"><img id="amd-img"><div id="amd-grain"></div>
+    <div id="amd-scan"></div></div>
   <div id="amd-log"></div>
   <div id="amd-meter" title=""><span>konteks</span>
     <div id="amd-bar"><i></i></div><b></b></div>
@@ -371,21 +367,29 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   // A tile made once and repeated. Shipping a PNG would mean another file
   // routed through the add-on's web exports for no benefit.
   if (%(grainon)s){
-    // 96 rather than 64: at any strength worth seeing, a 64px tile starts
-    // reading as a repeating pattern instead of as grain. Costs 20 KB in
-    // the page against 9, and buys the repeat being hard to spot.
-    var N=96, cv=document.createElement("canvas"); cv.width=cv.height=N;
-    var cx=cv.getContext("2d"), id=cx.createImageData(N,N);
-    // Alpha acak, bukan blend mode: 'overlay' di atas latar nyaris hitam
-    // menghasilkan simpangan 1 dari 255 -- ada, tapi tak terlihat. Butiran
-    // tembus pandang menumpuk apa adanya, jadi jalan di gelap maupun terang.
-    for(var i=0;i<id.data.length;i+=4){
-      var v=(Math.random()*255)|0;
-      id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=120;
+    // Four tiles made once and cycled, rather than one tile slid around. A
+    // sliding tile is a moving pattern; grain is supposed to be different every
+    // frame, and the eye picks up the difference immediately.
+    var N=96, tiles=[], grain=document.getElementById("amd-grain");
+    for(var t=0;t<4;t++){
+      var cv=document.createElement("canvas"); cv.width=cv.height=N;
+      var cx=cv.getContext("2d"), id=cx.createImageData(N,N);
+      for(var i=0;i<id.data.length;i+=4){
+        var v=(Math.random()*255)|0;
+        id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=120;
+      }
+      cx.putImageData(id,0,0);
+      tiles.push("url("+cv.toDataURL("image/png")+")");
     }
-    cx.putImageData(id,0,0);
-    document.getElementById("amd-grain").style.backgroundImage=
-      "url("+cv.toDataURL("image/png")+")";
+    grain.style.backgroundImage=tiles[0];
+    var still=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!still){
+      var k=0;
+      setInterval(function(){
+        k=(k+1+((Math.random()*3)|0))%%tiles.length;   // never the same one twice
+        grain.style.backgroundImage=tiles[k];
+      },90);
+    }
   }
 
   function pick(a){return a[(Math.random()*a.length)|0]}
