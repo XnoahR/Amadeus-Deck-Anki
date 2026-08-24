@@ -3,7 +3,7 @@
 Kalau kamu cuma mau ganti tema, mengecilkan suaranya, atau memasang model buat
 chat — **jangan di sini.** Pakai formnya:
 
-> **Tools → Amadeus: pengaturan…**
+> **Tools → Amadeus Deck → Pengaturan…**
 
 Isinya sama, tapi berupa kotak centang dan angka, bukan JSON, dan tidak bisa
 rusak gara-gara koma yang kelewat.
