@@ -17,8 +17,8 @@ jobs:
       - name: Check every module imports
         # A syntax error here would ship an add-on Anki refuses to load, and the
         # zip would look perfectly fine.
-        run: python3 -m compileall -q __init__.py reviewer.py voice.py updates.py check_character.py chat.py chatconf.py providers.py cardctx.py \
-            chat.py chatconf.py providers.py cardctx.py
+        run: python3 -m compileall -q __init__.py reviewer.py voice.py updates.py check_character.py chat.py chatconf.py providers.py cardctx.py settings.py \
+            chat.py chatconf.py providers.py cardctx.py settings.py
 
       - name: Check the version is consistent
         # The manifest is what Anki shows; updates.py is what decides whether to
@@ -38,7 +38,7 @@ jobs:
           mkdir -p dist
           zip -q -r dist/AmadeusDeck.ankiaddon \
             __init__.py reviewer.py voice.py updates.py check_character.py \
-            chat.py chatconf.py providers.py cardctx.py \
+            chat.py chatconf.py providers.py cardctx.py settings.py \
             config.json config.md manifest.json LICENSE character/README.txt
           unzip -l dist/AmadeusDeck.ankiaddon
 

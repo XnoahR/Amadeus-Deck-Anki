@@ -1,3 +1,21 @@
+### Ini pengaturan lengkapnya
+
+Kalau kamu cuma mau ganti tema, mengecilkan suaranya, atau memasang model buat
+chat — **jangan di sini.** Pakai formnya:
+
+> **Tools → Amadeus: pengaturan…**
+
+Isinya sama, tapi berupa kotak centang dan angka, bukan JSON, dan tidak bisa
+rusak gara-gara koma yang kelewat.
+
+Halaman ini untuk sisanya: kalimat yang dia ucapkan, ekspresi mana untuk state
+mana, provider lebih dari satu, dan angka-angka yang jarang disentuh.
+
+Baris `=====  NAMA  =====` cuma penanda kelompok. Boleh diabaikan, jangan
+dihapus kalau tidak perlu.
+
+---
+
 ### Amadeus Deck
 
 - **theme** — `"vhs"` (pita video, merah/cyan) atau `"holo"` (hologram, cyan/magenta)

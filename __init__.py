@@ -14,7 +14,7 @@ import re
 
 from aqt import gui_hooks, mw
 
-from . import chat, updates, voice
+from . import chat, settings, updates, voice
 from aqt.deckbrowser import DeckBrowserContent
 
 ADDON = os.path.basename(os.path.dirname(__file__))
@@ -815,6 +815,7 @@ def on_webview_content(web_content, context) -> None:
 
 
 chat.register()
+settings.register()
 gui_hooks.main_window_did_init.append(
     lambda: mw.progress.single_shot(
         8000, lambda: updates.check(mw.addonManager.getConfig(ADDON) or {}), True))
