@@ -103,9 +103,17 @@ def load_turns():
         return []
     if not isinstance(data, list):
         return []
-    return [t for t in data
-            if isinstance(t, dict) and t.get("role") in ("user", "assistant")
-            and isinstance(t.get("content"), str)]
+    out = []
+    for t in data:
+        if not isinstance(t, dict) or t.get("role") not in ("user", "assistant"):
+            continue
+        if not isinstance(t.get("content"), str):
+            continue
+        turn = {"role": t["role"], "content": t["content"]}
+        if isinstance(t.get("mood"), str):
+            turn["mood"] = t["mood"]
+        out.append(turn)
+    return out
 
 
 def save_turns(turns, keep):
@@ -154,6 +162,9 @@ def _page(cfg, pics, theme):
     vhs = theme != "holo"
     ink, edge = ("#f2ecff", "#ff2d55") if vhs else ("#d9e8f7", "#35d6ff")
     ground = "#0d0b12" if vhs else "#080d14"
+    card = "#141019" if vhs else "#0e1620"
+    line = "#2b1f3d" if vhs else "#1d3448"
+    dim = "#9a8fb5" if vhs else "#7e94aa"
     face = json.dumps({m: ["/_addons/%s/character/%s" % (chatconf.PACKAGE, n)
                            for n in v] for m, v in pics.items()})
     # The reviewer speaks a different mood vocabulary (good/wrong/pissed) from
@@ -165,6 +176,7 @@ def _page(cfg, pics, theme):
     vocab.update(cfg["chat_moods"])
     moods = json.dumps(vocab)
     vconf = json.dumps(voice.settings(cfg))
+    her, _you = chatconf.who(cfg)
     return """
 <style>
 html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
@@ -173,14 +185,26 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 #amd-face{position:relative;height:%(faceh)dpx;flex:none;overflow:hidden;
   border-bottom:2px solid %(edge)s;background:#000}
 #amd-face img{position:absolute;left:50%%;bottom:0;height:112%%;width:auto;
-  transform:translateX(-50%%);image-rendering:pixelated}
+  transform:translateX(-50%%)}
 #amd-scan{position:absolute;inset:0;pointer-events:none;
   background:repeating-linear-gradient(180deg,rgba(0,0,0,.34) 0 1px,transparent 1px 3px)}
-#amd-log{flex:1;overflow-y:auto;padding:10px 11px;line-height:1.55}
-.amd-turn{margin:0 0 10px;white-space:pre-wrap;word-break:break-word}
-.amd-turn.me{opacity:.72;border-left:2px solid %(edge)s;padding-left:8px}
-.amd-turn.her{border-left:2px solid transparent;padding-left:8px}
-#amd-status{flex:none;padding:5px 11px;font-size:11px;opacity:.6;min-height:16px}
+#amd-log{flex:1;overflow-y:auto;padding:12px 13px;line-height:1.58}
+#amd-log::-webkit-scrollbar{width:8px}
+#amd-log::-webkit-scrollbar-thumb{background:%(line)s}
+.amd-turn{margin:0 0 12px;word-break:break-word}
+.amd-turn.her{display:flex;gap:9px;align-items:flex-start}
+/* The expression she wore for this line, kept next to it: scrolling back
+   should show the mood she was in, not the mood she is in now. */
+.amd-thumb{flex:none;width:38px;height:38px;border:1px solid %(line)s;
+  background:#000 no-repeat;background-size:%(zoom)d%% auto;
+  background-position:50%% %(thumby)d%%}
+.amd-card{flex:1;background:%(card)s;border:1px solid %(line)s;
+  border-left:2px solid %(edge)s;padding:8px 11px;white-space:pre-wrap}
+.amd-name{font-size:10px;letter-spacing:.13em;color:%(edge)s;margin-bottom:3px}
+.amd-turn.me{text-align:right}
+.amd-turn.me span{display:inline-block;max-width:78%%;text-align:left;
+  color:%(dim)s;border:1px dashed %(line)s;padding:6px 10px;white-space:pre-wrap}
+#amd-status{flex:none;padding:5px 11px;font-size:11px;color:%(dim)s;min-height:16px}
 </style>
 <div id="amd-chat">
   <div id="amd-face"><img id="amd-img"><div id="amd-scan"></div></div>
@@ -190,13 +214,12 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 <script>
 %(voicejs)s
 (function(){
-  var PICS=%(face)s, MOODS=%(moods)s;
+  var PICS=%(face)s, MOODS=%(moods)s, NAME=%(name)s, THUMBMOOD=%(thumbmood)s;
   var log=document.getElementById("amd-log"), img=document.getElementById("amd-img");
   var status=document.getElementById("amd-status");
   var VC=%(vconf)s;
-  var MOUTH=amdMouth(function(src){img.src=src},framesFor,VC.mouthMs);
-  var V=amdVoice(VC, VC.mouth?MOUTH:{}), live=null;
 
+  function pick(a){return a[(Math.random()*a.length)|0]}
   // The whole ordered list, not one at random: the three pictures behind an
   // expression are mouth positions, and frame 1 is the shut one.
   function framesFor(mood){
@@ -204,35 +227,63 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
     for(var i=0;i<order.length;i++){var l=PICS[order[i]];if(l&&l.length)return l}
     var k=Object.keys(PICS);return k.length?PICS[k[0]]:[];
   }
+  var MOUTH=amdMouth(function(src){img.src=src},framesFor,VC.mouthMs);
+  var V=amdVoice(VC, VC.mouth?MOUTH:{}), live=null, liveThumb=null;
+
   function bottom(){log.scrollTop=log.scrollHeight}
-  function row(cls){
-    var d=document.createElement("div");d.className="amd-turn "+cls;
-    log.appendChild(d);bottom();return d;
+
+  function mine(text){
+    var d=document.createElement("div"); d.className="amd-turn me";
+    var s=document.createElement("span"); s.textContent=text;
+    d.appendChild(s); log.appendChild(d); bottom();
   }
+  function hers(mood){
+    var d=document.createElement("div"); d.className="amd-turn her";
+    var th=document.createElement("div"); th.className="amd-thumb";
+    var f=framesFor(THUMBMOOD?mood:"normal");
+    if(f.length) th.style.backgroundImage="url("+f[0]+")";
+    var card=document.createElement("div"); card.className="amd-card";
+    var nm=document.createElement("div"); nm.className="amd-name"; nm.textContent=NAME;
+    var body=document.createElement("div");
+    card.appendChild(nm); card.appendChild(body);
+    d.appendChild(th); d.appendChild(card); log.appendChild(d); bottom();
+    return {body:body, thumb:th};
+  }
+
   window.amdChat={
-    mood:function(m){MOUTH.set(m)},
-    me:function(t){row("me").textContent=t},
-    open:function(){live=row("her");V.open(live)},
+    mood:function(m){
+      MOUTH.set(m);
+      // The face tag arrives after the line has already opened, so the row's
+      // own thumbnail is corrected the moment we learn it.
+      if(liveThumb&&THUMBMOOD){var f=framesFor(m);
+        if(f.length) liveThumb.style.backgroundImage="url("+f[0]+")"}
+    },
+    me:function(t){mine(t)},
+    open:function(){var r=hers("normal");live=r.body;liveThumb=r.thumb;V.open(live)},
     push:function(t){if(live){V.push(t);bottom()}},
-    close:function(){V.close();live=null;bottom()},
-    said:function(t){V.say(row("her"),t);bottom()},
-    past:function(role,t){row(role==="user"?"me":"her").textContent=t;bottom()},
+    close:function(){V.close();live=null;liveThumb=null;bottom()},
+    said:function(t,mood){var r=hers(mood||"normal");V.say(r.body,t);bottom()},
+    past:function(role,t,mood){
+      if(role==="user"){mine(t)} else {hers(mood||"normal").body.textContent=t;}
+      bottom();
+    },
     status:function(t){status.textContent=t||""},
-    clear:function(){log.innerHTML="";status.textContent=""}
+    clear:function(){log.innerHTML="";status.textContent="";live=null;liveThumb=null}
   };
-  // Clicking finishes the line rather than waiting it out.
-  document.getElementById("amd-log").addEventListener("click",function(){
-    V.wake(); V.skip();
-  });
+  log.addEventListener("click",function(){V.wake();V.skip()});
   document.getElementById("amd-face").addEventListener("click",function(){
     V.wake(); pycmd("amd_chat_poke");
   });
   window.amdChat.mood("normal");
 })();
 </script>
-""" % {"ground": ground, "ink": ink, "edge": edge, "face": face,
-       "moods": moods, "voicejs": voice.JS, "vconf": vconf,
-       "faceh": max(90, min(int(cfg.get("chat_face_height") or 220), 600))}
+""" % {"ground": ground, "ink": ink, "edge": edge, "face": face, "card": card,
+       "line": line, "dim": dim, "moods": moods, "voicejs": voice.JS,
+       "vconf": vconf, "name": json.dumps(her.upper()),
+       "faceh": max(90, min(int(cfg.get("chat_face_height") or 220), 600)),
+       "zoom": max(100, min(int(cfg.get("chat_thumb_zoom") or 240), 800)),
+       "thumby": max(0, min(int(cfg.get("chat_thumb_y") or 20), 100)),
+       "thumbmood": "true" if cfg.get("chat_thumb_expression", True) else "false"}
 
 
 class ChatDock(QDockWidget):
@@ -249,6 +300,7 @@ class ChatDock(QDockWidget):
         self._stop = threading.Event()
         self._busy = False
         self._head: MoodHead | None = None
+        self._mood = "normal"
         self._moods: Any = {}
 
         box = QWidget(self)
@@ -307,7 +359,8 @@ class ChatDock(QDockWidget):
         self.picker.blockSignals(False)
         if cfg["remember_chat"]:
             for turn in self._turns[-int(cfg["remember_messages"]):]:
-                self._say("past", turn["role"], turn["content"])
+                self._say("past", turn["role"], turn["content"],
+                          turn.get("mood") or "normal")
 
     def _eval(self, js):
         try:
@@ -367,6 +420,7 @@ class ChatDock(QDockWidget):
         self._stop.clear()
         self._moods = cfg["chat_moods"]
         self._head = MoodHead(self._moods)
+        self._mood = "normal"
         self.send_btn.setText("Stop")
         self._say("status", "%s memikirkan…" % provider["model"])
         self._say("open")
@@ -377,6 +431,7 @@ class ChatDock(QDockWidget):
             mood, shown = self._head.feed(delta)
             def apply():
                 if mood:
+                    self._mood = mood
                     self._say("mood", mood)
                 if shown:
                     self._say("push", shown)
@@ -423,7 +478,9 @@ class ChatDock(QDockWidget):
             strip = MoodHead(self._moods or [])
             _mood, body = strip.feed(text)
             body += strip.flush()
-            self._turns.append({"role": "assistant", "content": (body or text).strip()})
+            self._turns.append({"role": "assistant",
+                                "content": (body or text).strip(),
+                                "mood": self._mood})
         cfg = chatconf.load()
         if cfg["remember_chat"]:
             save_turns(self._turns, cfg["remember_messages"])
@@ -432,7 +489,9 @@ class ChatDock(QDockWidget):
         out = []
         turns = max(0, int(cfg["max_history_turns"]))
         for turn in (self._turns[:-1][-turns * 2:] if turns else []):
-            out.append(dict(turn))
+            # role and content only: the mood is ours for drawing her face, and
+            # a stray field is rejected outright by some providers.
+            out.append({"role": turn["role"], "content": turn["content"]})
         content = text
         if cfg["send_card_context"]:
             try:
@@ -462,7 +521,7 @@ def react(mood, line):
         return False
     _dock._say("mood", mood)
     if line:
-        _dock._say("said", line)
+        _dock._say("said", line, mood)
     return True
 
 

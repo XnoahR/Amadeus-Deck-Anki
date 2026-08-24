@@ -167,6 +167,16 @@ dropdown di panelnya.
 dalam piksel. Bawaan `420` dan `220`. Panelnya juga bisa ditarik-tarik seperti
 dock biasa; angka ini cuma ukuran saat pertama dibuka.
 
+**`chat_thumb_expression`** — potret kecil di tiap kalimatnya memakai ekspresi
+saat kalimat itu diucapkan, jadi waktu menggulung ke atas kamu tetap tahu dia
+lagi kesal di titik mana. Dimatikan berarti selalu wajah normal — lebih tenang
+kalau ekspresinya sering berganti.
+
+**`chat_thumb_zoom`** dan **`chat_thumb_y`** — krop potret kecilnya, dalam
+persen. Bawaannya dipas-kan untuk sprite berdiri seperti Kurisu (wajah di
+bagian atas gambar). Kalau karaktermu berbeda bentuk dan yang muncul cuma
+rambut atau dada, dua angka inilah yang digeser.
+
 **`about_you`** — hal tetap tentang kamu yang selalu dia tahu: sedang kejar
 N2 Desember, benci kanji, maunya dijawab pendek. **Kamu yang menulisnya**, bukan
 dia yang menyimpulkan — kesimpulan yang keliru akan terkirim ulang di tiap
