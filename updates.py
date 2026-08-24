@@ -19,7 +19,7 @@ import urllib.request
 from aqt import mw
 from aqt.utils import tooltip
 
-VERSION = "1.2.1"
+VERSION = "1.3.0"
 REPO = "XnoahR/Amadeus-Deck-Anki"
 RELEASES = "https://github.com/%s/releases/latest" % REPO
 
