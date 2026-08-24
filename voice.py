@@ -21,6 +21,10 @@ DEFAULTS = {
     "dialog_volume": 0.16,
     "dialog_pitch": 440,
     "dialog_every": 3,
+    "blink": True,
+    "blink_min_ms": 2800,
+    "blink_max_ms": 7000,
+    "blink_hold_ms": 120,
     "dialog_mouth": True,
     "dialog_mouth_ms": 110,
     "dialog_caret": True,
@@ -44,6 +48,10 @@ def settings(c):
         "vol": round(num("dialog_volume", 0.0, 1.0), 3),
         "pitch": round(num("dialog_pitch", 80, 2000)),
         "every": int(num("dialog_every", 1, 8)),
+        "blink": bool(c.get("blink", DEFAULTS["blink"])),
+        "blinkMin": int(num("blink_min_ms", 400, 60000)),
+        "blinkMax": int(num("blink_max_ms", 600, 90000)),
+        "blinkHold": int(num("blink_hold_ms", 40, 1000)),
         "mouth": bool(c.get("dialog_mouth", DEFAULTS["dialog_mouth"])),
         "mouthMs": int(num("dialog_mouth_ms", 40, 400)),
         "caret": bool(c.get("dialog_caret", DEFAULTS["dialog_caret"])),
@@ -57,18 +65,61 @@ JS = r"""
 // open -- not variations on a pose. Walking them 1-2-3-2-1 is a mouth moving;
 // picking one at random, which is what everything here did before, leaves her
 // resting mid-word with her mouth hanging open.
-function amdMouth(apply, framesOf, ms){
+function amdMouth(apply, framesOf, ms, blink){
   var timer = null, frames = [], i = 0, dir = 1, mood = null;
+  var blinker = null, holding = null, talking = false;
 
   function rest(){
     frames = framesOf(mood) || [];
     if (frames.length) apply(frames[0]);
   }
 
+  // Which closed-eye set matches the pose she is holding. The add-on already
+  // groups pictures by the mood their filename ends with, so reading "sided"
+  // off the current frame is the same convention, not a new assumption.
+  function shut(){
+    if (!blink || !blink.on) return null;
+    var sided = frames.length && /sided/.test(frames[0]);
+    var set = (sided && blink.sided && blink.sided.length) ? blink.sided : blink.closed;
+    return (set && set.length) ? set[0] : null;
+  }
+
+  function laterBlink(){
+    if (!blink || !blink.on) return;
+    var lo = blink.min || 2800, hi = blink.max || 7000;
+    clearTimeout(blinker);
+    blinker = setTimeout(doBlink, lo + Math.random() * Math.max(1, hi - lo));
+  }
+
+  function doBlink(){
+    // Never over a line being spoken: the mouth is mid-cycle and an eyes-shut
+    // frame would fight it for the same img.
+    var src = talking ? null : shut();
+    if (!src) { laterBlink(); return; }
+    apply(src);
+    clearTimeout(holding);
+    holding = setTimeout(function(){
+      if (!talking) rest();
+      // Blinks come in pairs often enough that always singles reads as a tic.
+      if (Math.random() < 0.25 && !talking){
+        clearTimeout(holding);
+        holding = setTimeout(function(){
+          var again = talking ? null : shut();
+          if (again){
+            apply(again);
+            setTimeout(function(){ if (!talking) rest(); }, blink.hold || 120);
+          }
+        }, 170);
+      }
+      laterBlink();
+    }, blink.hold || 120);
+  }
+
   return {
     // Called whenever the expression changes, not only while she is speaking.
     set: function(name){ mood = name; if (!timer) rest(); },
     start: function(){
+      talking = true;
       frames = framesOf(mood) || [];
       if (frames.length < 2) return;
       if (timer) clearInterval(timer);
@@ -81,8 +132,17 @@ function amdMouth(apply, framesOf, ms){
       }, ms || 110);
     },
     stop: function(){
+      talking = false;
       if (timer) { clearInterval(timer); timer = null; }
       if (frames.length) apply(frames[0]);   // shut, always
+    },
+    // Started by the caller once the pictures are known, so a character with no
+    // eyes_closed set simply never blinks instead of blinking to a wrong face.
+    blink: function(){
+      var still = window.matchMedia &&
+                  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (still) return;
+      laterBlink();
     }
   };
 }

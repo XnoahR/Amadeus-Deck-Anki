@@ -137,6 +137,20 @@ dia diam. Kalau ekspresimu cuma punya satu gambar, dia diam saja.
 **`dialog_mouth_ms`** — kecepatan gerakan mulutnya, milidetik per frame.
 Bawaan `110`. Kecil = cerewet.
 
+**`blink`** — matanya berkedip sesekali waktu dia diam. Memakai gambar
+berakhiran `eyes_closed` (dan `sided_eyes_closed` kalau posenya menyamping).
+Karakter yang tidak punya gambar itu tidak berkedip — bukan berkedip ke wajah
+yang salah.
+
+Dia tidak pernah berkedip di tengah kalimat: mulutnya sedang bergerak, dan dua
+animasi memperebutkan gambar yang sama akan terlihat kacau. Sesekali kedipnya
+dobel, karena kedip tunggal terus-menerus terbaca seperti tic.
+
+**`blink_min_ms`** dan **`blink_max_ms`** — jarak antar kedip, diacak di antara
+keduanya. Bawaan `2800` dan `7000`.
+
+**`blink_hold_ms`** — lama matanya tertutup. Bawaan `120`.
+
 **`dialog_caret`** — kursor kedip di ujung teks selagi dia mengetik, seperti
 kursor terminal. Dicabut begitu kalimatnya selesai. Waktu jawabannya masih
 mengalir dari model, kursornya tetap berkedip di sela — itu tanda jujur bahwa

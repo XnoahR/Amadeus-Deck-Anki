@@ -204,9 +204,13 @@ __GRAIN__
     return k.length ? D.pics[k[0]] : [];
   }
 
+  var V0 = D.voice || {};
+  var BLINK = {on: V0.blink, min: V0.blinkMin, max: V0.blinkMax, hold: V0.blinkHold,
+               closed: D.pics.eyes_closed || [], sided: D.pics.sided_eyes_closed || []};
   var MOUTH = amdMouth(function(src){
     for (var i = 0; i < imgs.length; i++) imgs[i].src = src;
-  }, framesFor, D.voice && D.voice.mouthMs);
+  }, framesFor, V0.mouthMs, BLINK);
+  MOUTH.blink();
   var V = amdVoice(D.voice || {}, (D.voice && D.voice.mouth) ? MOUTH : {});
 
   function settle(){

@@ -546,9 +546,14 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
     var keys=Object.keys(D.pics||{{}});
     return keys.length?D.pics[keys[0]]:[];
   }}
+  var V0=D.voice||{{}};
+  var BLINK={{on:V0.blink,min:V0.blinkMin,max:V0.blinkMax,hold:V0.blinkHold,
+             closed:(D.pics&&D.pics.eyes_closed)||[],
+             sided:(D.pics&&D.pics.sided_eyes_closed)||[]}};
   var MOUTH=amdMouth(function(src){{
     for(var i=0;i<imgs.length;i++)imgs[i].src=src;
-  }},framesFor,D.voice&&D.voice.mouthMs);
+  }},framesFor,V0.mouthMs,BLINK);
+  MOUTH.blink();
   amdGrain(panel.querySelector(".amd-noise"),D.grain);
   var VOICE=amdVoice(D.voice||{{}},(D.voice&&D.voice.mouth)?MOUTH:{{}});
   function show(mood){{

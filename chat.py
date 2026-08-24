@@ -375,7 +375,12 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
     for(var i=0;i<order.length;i++){var l=PICS[order[i]];if(l&&l.length)return l}
     var k=Object.keys(PICS);return k.length?PICS[k[0]]:[];
   }
-  var MOUTH=amdMouth(function(src){img.src=src},framesFor,VC.mouthMs);
+  // Exact lookup, not framesFor(): that falls back to another mood, and a blink
+  // landing on some other face is worse than not blinking at all.
+  var BLINK={on:VC.blink,min:VC.blinkMin,max:VC.blinkMax,hold:VC.blinkHold,
+             closed:PICS["eyes_closed"]||[],sided:PICS["sided_eyes_closed"]||[]};
+  var MOUTH=amdMouth(function(src){img.src=src},framesFor,VC.mouthMs,BLINK);
+  MOUTH.blink();
   var V=amdVoice(VC, VC.mouth?MOUTH:{}), live=null, liveThumb=null;
 
   function bottom(){log.scrollTop=log.scrollHeight}
