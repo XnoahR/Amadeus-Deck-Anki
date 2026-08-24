@@ -26,11 +26,17 @@ jobs:
         # The manifest is what Anki shows; updates.py is what decides whether to
         # tell anyone. If they disagree the add-on nags about a release it is.
         run: |
-          tag="${GITHUB_REF_NAME#v}"
           man=$(python3 -c "import json;print(json.load(open('manifest.json'))['human_version'])")
           ver=$(python3 -c "import re;print(re.search(r'VERSION = \"([^\"]+)\"',open('updates.py').read()).group(1))")
-          echo "tag=$tag manifest=$man updates.py=$ver"
-          [ "$tag" = "$man" ] && [ "$tag" = "$ver" ] || { echo "versi tidak cocok"; exit 1; }
+          echo "manifest=$man updates.py=$ver ref=$GITHUB_REF_NAME"
+          [ "$man" = "$ver" ] || { echo "manifest.json dan updates.py tidak cocok"; exit 1; }
+          # Only a tag carries a version to compare against; a manual run has a
+          # branch name there, and comparing it would fail every single time.
+          case "$GITHUB_REF" in
+            refs/tags/*)
+              tag="${GITHUB_REF_NAME#v}"
+              [ "$tag" = "$man" ] || { echo "tag $tag != versi $man"; exit 1; } ;;
+          esac
 
       - name: Build AmadeusDeck.ankiaddon
         # An .ankiaddon is a plain zip with __init__.py at the root. The
