@@ -408,16 +408,25 @@ center{{display:flex !important;flex-wrap:wrap;align-items:flex-start;
    everything unrecognised is parked full-width at the bottom. */
 center>*{{order:4;flex-basis:100%}}
 center>br{{display:none}}
-center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margin:0}}
-.amd-deckbox{{max-height:{dh}px;box-sizing:border-box;
+/* Three real columns, not one column with two absolutely positioned wings.
+   Absolute children take up no space, so with a short deck list the portrait
+   and the history hung past the bottom of the deck box and drew over whatever
+   the next add-on had placed below -- which only shows when decks are few. */
+center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;margin:0;
+  display:flex;align-items:flex-start;gap:18px}}
+.amd-deckbox{{max-height:{dh}px;box-sizing:border-box;flex:0 1 auto;min-width:0;
   overflow-y:auto;overflow-x:hidden;padding:12px 16px;position:relative}}
 .amd-deckbox table{{margin:0}}
 .amd-deckbox::-webkit-scrollbar{{width:10px}}
 .amd-deckbox::-webkit-scrollbar-track{{background:transparent}}
 #studiedToday{{order:3;flex-basis:100%;text-align:center;margin-top:4px}}
-.amd-side{{position:absolute;right:calc(100% + 18px);top:0;width:{w}px;
+/* DOM order is deck, side, right; the eye wants side, deck, right. Ordering
+   here rather than moving nodes keeps the script that builds the stage out of
+   it. */
+.amd-side{{order:1;flex:none;width:{w}px;
   display:flex;flex-direction:column;gap:12px}}
-.amd-right{{position:absolute;left:calc(100% + 18px);top:0;width:{rw}px;
+.amd-deckbox{{order:2}}
+.amd-right{{order:3;flex:none;width:{rw}px;
   display:flex;flex-direction:column;gap:12px}}
 .amd-card{{padding:12px 14px;font-family:system-ui,sans-serif;font-size:12.5px;
   display:flex;flex-direction:column;gap:8px}}
@@ -434,11 +443,13 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
 /* On a narrow window the portrait would hang off the left edge, so it drops
    back above the decks instead of disappearing. */
 @media (max-width:1400px){{
-  .amd-right{{position:static;margin:12px auto 0;left:auto;width:100%;max-width:420px}}
+  center>.amd-stage{{flex-wrap:wrap;justify-content:center}}
+  .amd-right{{order:4;width:100%;max-width:420px;margin:12px auto 0}}
 }}
 @media (max-width:1000px){{
-  .amd-side{{position:static;margin:0 auto 12px;right:auto;order:-1}}
-  center>.amd-stage{{display:flex;flex-direction:column;align-items:center}}
+  center>.amd-stage{{flex-direction:column;align-items:center}}
+  .amd-side{{order:1;margin:0 auto 12px}}
+  .amd-deckbox{{width:100%}}
 }}
 .amd-img{{position:absolute;left:50%;bottom:0;height:100%;width:auto;
   max-width:none !important;transform:translateX(-50%);pointer-events:none}}
