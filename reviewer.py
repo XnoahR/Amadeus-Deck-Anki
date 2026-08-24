@@ -197,19 +197,25 @@ __VOICE__
   var imgs = root.querySelectorAll("img");
   var say = root.querySelector(".say");
   var timer = null;
-  var VOICE = amdVoice(D.voice || {});
 
   function pick(a){ return a[(Math.random() * a.length) | 0]; }
 
-  function picFor(mood){
+  // The ordered list, not one at random: these are mouth positions and frame 1
+  // is the shut one.
+  function framesFor(mood){
     var order = D.moodFor[mood] || ["normal"];
     for (var i = 0; i < order.length; i++){
       var l = D.pics[order[i]];
-      if (l && l.length) return pick(l);
+      if (l && l.length) return l;
     }
     var k = Object.keys(D.pics);
-    return k.length ? pick(D.pics[k[0]]) : null;
+    return k.length ? D.pics[k[0]] : [];
   }
+
+  var MOUTH = amdMouth(function(src){
+    for (var i = 0; i < imgs.length; i++) imgs[i].src = src;
+  }, framesFor, D.voice && D.voice.mouthMs);
+  var V = amdVoice(D.voice || {}, (D.voice && D.voice.mouth) ? MOUTH : {});
 
   function settle(){
     // Back to a quiet face rather than vanishing, so she stays company for the
@@ -219,12 +225,11 @@ __VOICE__
   }
 
   window.amdReact = function(mood, quiet){
-    var src = picFor(mood);
-    if (src) { for (var i = 0; i < imgs.length; i++) imgs[i].src = src; }
+    MOUTH.set(mood);
     var pool = D.lines[mood];
     var text = pool ? pick(pool) : "";
     say.style.display = text ? "block" : "none";
-    VOICE.say(say, text);
+    V.say(say, text);
     host.style.opacity = "1";
     if (fx && !quiet){
       wrap.classList.remove("jolt"); void wrap.offsetWidth; wrap.classList.add("jolt");
@@ -235,9 +240,9 @@ __VOICE__
   };
 
   wrap.addEventListener("click", function(){
-    VOICE.wake();
+    V.wake();
     // mid-sentence, a click finishes the line instead of discarding it
-    if (VOICE.skip()) return;
+    if (V.skip()) return;
     window.amdReact("poke");
   });
 

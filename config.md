@@ -93,6 +93,14 @@ musik, jadi jangan besar-besar.
 **`dialog_pitch`** — nada dasar dalam Hz. Bawaan `440`. Naikkan untuk suara
 yang lebih tinggi/imut, turunkan untuk yang lebih berat.
 
+**`dialog_mouth`** — mulutnya bergerak selagi dia bicara. Tiga gambar di balik
+tiap ekspresi itu posisi mulut (tertutup, sedikit terbuka, terbuka), bukan pose
+yang berbeda-beda; frame-nya dijalankan 1-2-3-2-1 dan berhenti di frame 1 waktu
+dia diam. Kalau ekspresimu cuma punya satu gambar, dia diam saja.
+
+**`dialog_mouth_ms`** — kecepatan gerakan mulutnya, milidetik per frame.
+Bawaan `110`. Kecil = cerewet.
+
 **`dialog_caret`** — kursor kedip di ujung teks selagi dia mengetik, seperti
 kursor terminal. Dicabut begitu kalimatnya selesai. Waktu jawabannya masih
 mengalir dari model, kursornya tetap berkedip di sela — itu tanda jujur bahwa

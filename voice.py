@@ -21,6 +21,8 @@ DEFAULTS = {
     "dialog_volume": 0.16,
     "dialog_pitch": 440,
     "dialog_every": 3,
+    "dialog_mouth": True,
+    "dialog_mouth_ms": 110,
     "dialog_caret": True,
     "dialog_caret_char": "\u258c",
 }
@@ -42,6 +44,8 @@ def settings(c):
         "vol": round(num("dialog_volume", 0.0, 1.0), 3),
         "pitch": round(num("dialog_pitch", 80, 2000)),
         "every": int(num("dialog_every", 1, 8)),
+        "mouth": bool(c.get("dialog_mouth", DEFAULTS["dialog_mouth"])),
+        "mouthMs": int(num("dialog_mouth_ms", 40, 400)),
         "caret": bool(c.get("dialog_caret", DEFAULTS["dialog_caret"])),
         "caretChar": str(c.get("dialog_caret_char")
                          or DEFAULTS["dialog_caret_char"])[:2],
@@ -49,8 +53,42 @@ def settings(c):
 
 
 JS = r"""
-function amdVoice(o){
-  o = o || {};
+// The three pictures behind each expression are mouth positions -- shut, ajar,
+// open -- not variations on a pose. Walking them 1-2-3-2-1 is a mouth moving;
+// picking one at random, which is what everything here did before, leaves her
+// resting mid-word with her mouth hanging open.
+function amdMouth(apply, framesOf, ms){
+  var timer = null, frames = [], i = 0, dir = 1, mood = null;
+
+  function rest(){
+    frames = framesOf(mood) || [];
+    if (frames.length) apply(frames[0]);
+  }
+
+  return {
+    // Called whenever the expression changes, not only while she is speaking.
+    set: function(name){ mood = name; if (!timer) rest(); },
+    start: function(){
+      frames = framesOf(mood) || [];
+      if (frames.length < 2) return;
+      if (timer) clearInterval(timer);
+      i = 0; dir = 1;
+      timer = setInterval(function(){
+        if (i + dir > frames.length - 1) dir = -1;
+        else if (i + dir < 0) dir = 1;
+        i += dir;
+        apply(frames[i]);
+      }, ms || 110);
+    },
+    stop: function(){
+      if (timer) { clearInterval(timer); timer = null; }
+      if (frames.length) apply(frames[0]);   // shut, always
+    }
+  };
+}
+
+function amdVoice(o, hooks){
+  o = o || {}; hooks = hooks || {};
   var AC = null, wave = null, tick = null;
   var full = "", node = null, n = 0, streaming = false;
   var body = null, caret = null, blinker = null;
@@ -102,9 +140,15 @@ function amdVoice(o){
     caret = null;
   }
 
+  function fire(name){
+    if (typeof hooks[name] === "function") { try { hooks[name](); } catch (e) {} }
+  }
+
   function stop(){
+    var was = !!tick;
     if (tick) { clearInterval(tick); tick = null; }
     unmount();
+    if (was) fire("stop");
   }
 
   // A text node plus a caret element, rather than writing textContent, because
@@ -146,6 +190,7 @@ function amdVoice(o){
     node = el; n = 0;
     mount(el);
     tick = setInterval(step, o.speed);
+    fire("start");
   }
 
   return {

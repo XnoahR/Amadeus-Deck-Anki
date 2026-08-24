@@ -661,21 +661,24 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;position:relative;margi
   var say=document.getElementById("amd-say");
   var imgs=panel.querySelectorAll(".amd-img");
   var timer=null,chat=null;
-  var VOICE=amdVoice(D.voice||{{}});
 
   function pick(a){{return a[(Math.random()*a.length)|0]}}
-  function picFor(mood){{
+  // The ordered list, not one at random: mouth positions, frame 1 shut.
+  function framesFor(mood){{
     var order=(D.moodFor&&D.moodFor[mood])||["normal"];
     for(var i=0;i<order.length;i++){{
       var list=D.pics[order[i]];
-      if(list&&list.length)return pick(list);
+      if(list&&list.length)return list;
     }}
     var keys=Object.keys(D.pics||{{}});
-    return keys.length?pick(D.pics[keys[0]]):null;
+    return keys.length?D.pics[keys[0]]:[];
   }}
+  var MOUTH=amdMouth(function(src){{
+    for(var i=0;i<imgs.length;i++)imgs[i].src=src;
+  }},framesFor,D.voice&&D.voice.mouthMs);
+  var VOICE=amdVoice(D.voice||{{}},(D.voice&&D.voice.mouth)?MOUTH:{{}});
   function show(mood){{
-    var src=picFor(mood);
-    if(src)for(var i=0;i<imgs.length;i++)imgs[i].src=src;
+    MOUTH.set(mood);
     var pool=(D.lines&&D.lines[mood])||[];
     if(pool.length)VOICE.say(say,pick(pool));
     panel.classList.remove("amd-jolt");void panel.offsetWidth;

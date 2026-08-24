@@ -238,5 +238,7 @@
   "send_card_context": true,
   "max_context_chars": 900,
   "dialog_caret": true,
-  "dialog_caret_char": "▌"
+  "dialog_caret_char": "▌",
+  "dialog_mouth": true,
+  "dialog_mouth_ms": 110
 }

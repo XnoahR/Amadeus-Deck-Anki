@@ -157,13 +157,16 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   var PICS=%(face)s, MOODS=%(moods)s;
   var log=document.getElementById("amd-log"), img=document.getElementById("amd-img");
   var status=document.getElementById("amd-status");
-  var V=amdVoice(%(vconf)s), live=null;
+  var VC=%(vconf)s;
+  var MOUTH=amdMouth(function(src){img.src=src},framesFor,VC.mouthMs);
+  var V=amdVoice(VC, VC.mouth?MOUTH:{}), live=null;
 
-  function pick(a){return a[(Math.random()*a.length)|0]}
-  function faceFor(mood){
+  // The whole ordered list, not one at random: the three pictures behind an
+  // expression are mouth positions, and frame 1 is the shut one.
+  function framesFor(mood){
     var order=MOODS[mood]||MOODS.normal||["normal"];
-    for(var i=0;i<order.length;i++){var l=PICS[order[i]];if(l&&l.length)return pick(l)}
-    var k=Object.keys(PICS);return k.length?pick(PICS[k[0]]):null;
+    for(var i=0;i<order.length;i++){var l=PICS[order[i]];if(l&&l.length)return l}
+    var k=Object.keys(PICS);return k.length?PICS[k[0]]:[];
   }
   function bottom(){log.scrollTop=log.scrollHeight}
   function row(cls){
@@ -171,7 +174,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
     log.appendChild(d);bottom();return d;
   }
   window.amdChat={
-    mood:function(m){var s=faceFor(m);if(s)img.src=s},
+    mood:function(m){MOUTH.set(m)},
     me:function(t){row("me").textContent=t},
     open:function(){live=row("her");V.open(live)},
     push:function(t){if(live){V.push(t);bottom()}},
