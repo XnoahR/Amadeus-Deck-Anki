@@ -8,6 +8,7 @@ disturb your cards. Remove the add-on and your notes are exactly as they were.
 """
 
 import json
+import random
 
 from . import voice
 
@@ -58,6 +59,15 @@ def _merged(key, fallback):
     return out
 
 
+def _chat_open():
+    """Whether the chat panel is up. Imported late: chat imports this module."""
+    try:
+        from . import chat
+        return chat.is_open()
+    except Exception:
+        return False
+
+
 def _payload(addon, pics):
     c = _cfg()
     corner = c.get("reviewer_corner") or "bottom-right"
@@ -72,6 +82,7 @@ def _payload(addon, pics):
         "always": bool(c.get("reviewer_always_visible", True)),
         "theme": "holo" if c.get("theme") == "holo" else "vhs",
         "effects": bool(c.get("effects", True)),
+        "hidden": _chat_open(),
         "voice": voice.settings(c),
     })
 
@@ -100,6 +111,11 @@ __VOICE__
 
   // Shadow DOM: the card's own stylesheet cannot cross this boundary, so Kiku
   // (or any note type) stays untouched and unaffected either way.
+  if (D.hidden) host.style.display = "none";
+  // The panel and this overlay are the same character. Whichever is on screen
+  // takes the reaction; both at once is one of her too many.
+  window.amdRevShow = function(on){ host.style.display = on ? "" : "none"; };
+
   var root = host.attachShadow({mode: "open"});
   var vhs = D.theme === "vhs";
 
@@ -256,6 +272,15 @@ def on_answer(reviewer, card, ease):
     else:
         _again_run = 0
         mood = {2: "hard", 3: "good", 4: "easy"}.get(ease, "good")
+    try:
+        from . import chat
+
+        if chat.is_open():
+            pool = _merged("reviewer_lines", DEFAULT_REV_LINES).get(mood) or []
+            chat.react(mood, random.choice(pool) if pool else "")
+            return
+    except Exception:
+        pass
     try:
         reviewer.web.eval("window.amdReact && window.amdReact(%s)" % json.dumps(mood))
     except Exception:

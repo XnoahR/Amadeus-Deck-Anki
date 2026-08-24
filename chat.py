@@ -103,14 +103,21 @@ def _page(cfg, pics, theme):
     ground = "#0d0b12" if vhs else "#080d14"
     face = json.dumps({m: ["/_addons/%s/character/%s" % (chatconf.PACKAGE, n)
                            for n in v] for m, v in pics.items()})
-    moods = json.dumps(cfg["chat_moods"])
+    # The reviewer speaks a different mood vocabulary (good/wrong/pissed) from
+    # the chat (happy/sad/thinking). Since one panel now shows both, it has to
+    # know both names -- otherwise every reaction to a card falls back to a
+    # blank face. Chat names win where the two collide.
+    from . import reviewer as _rev
+    vocab = dict(_rev._merged("reviewer_moods", _rev.DEFAULT_REV_MOOD))
+    vocab.update(cfg["chat_moods"])
+    moods = json.dumps(vocab)
     vconf = json.dumps(voice.settings(cfg))
     return """
 <style>
 html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   font-family:system-ui,-apple-system,sans-serif;font-size:13px}
 #amd-chat{display:flex;flex-direction:column;height:100vh}
-#amd-face{position:relative;height:150px;flex:none;overflow:hidden;
+#amd-face{position:relative;height:%(faceh)dpx;flex:none;overflow:hidden;
   border-bottom:2px solid %(edge)s;background:#000}
 #amd-face img{position:absolute;left:50%%;bottom:0;height:112%%;width:auto;
   transform:translateX(-50%%);image-rendering:pixelated}
@@ -167,7 +174,8 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 })();
 </script>
 """ % {"ground": ground, "ink": ink, "edge": edge, "face": face,
-       "moods": moods, "voicejs": voice.JS, "vconf": vconf}
+       "moods": moods, "voicejs": voice.JS, "vconf": vconf,
+       "faceh": max(90, min(int(cfg.get("chat_face_height") or 220), 600))}
 
 
 class ChatDock(QDockWidget):
@@ -206,7 +214,8 @@ class ChatDock(QDockWidget):
 
         self.input = QPlainTextEdit(box)
         self.input.setPlaceholderText("Tanya apa saja…  (Ctrl+Enter kirim)")
-        self.input.setFixedHeight(64)
+        self.input.setMinimumHeight(70)
+        self.input.setMaximumHeight(150)
         lay.addWidget(self.input)
 
         self.setWidget(box)
@@ -363,6 +372,25 @@ class ChatDock(QDockWidget):
         QDockWidget.closeEvent(self, event)
 
 
+def react(mood, line):
+    """Her reaction to an answered card, when the chat panel is the surface
+    showing her. Two of her on screen at once -- a floating overlay and a panel
+    -- is one too many, so whichever is open gets the reaction, not both.
+
+    Returns whether the panel took it.
+    """
+    if _dock is None or not _dock.isVisible():
+        return False
+    _dock._say("mood", mood)
+    if line:
+        _dock._say("said", line)
+    return True
+
+
+def is_open():
+    return _dock is not None and _dock.isVisible()
+
+
 _dock: ChatDock | None = None
 
 
@@ -380,64 +408,24 @@ def toggle():
     if _dock is None:
         _dock = ChatDock(mw)
         mw.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, _dock)
-        _dock.resize(QSize(340, 620))
+        width = max(280, min(int(cfg.get("chat_width") or 420), 1200))
+        _dock.setMinimumWidth(280)
+        _dock.resize(QSize(width, 760))
     _dock.setVisible(not _dock.isVisible())
     if _dock.isVisible():
         _dock.input.setFocus()
+    _tell_reviewer(not _dock.isVisible())
 
 
-def import_from_ayumi():
-    """Carry provider entries over from the ayumi-assistant add-on.
-
-    Retyping an API key to move between two add-ons on the same machine is a
-    pointless risk, so this copies them in place. It runs in Anki, against
-    files that are already on disk, and prints nothing.
-    """
-    import os
-
-    folder = os.path.join(os.path.dirname(os.path.dirname(
-        os.path.abspath(__file__))), "ayumi_assistant")
-    meta = os.path.join(folder, "meta.json")
-    found = []
-    for path in (meta, os.path.join(folder, "config.json")):
-        try:
-            with open(path, encoding="utf-8") as fh:
-                blob = json.load(fh)
-        except (OSError, ValueError):
-            continue
-        entries = (blob.get("config") or blob).get("providers")
-        if isinstance(entries, list) and entries:
-            found = entries
-            if path == meta:
-                break            # meta.json holds what the user actually set
-
-    if not found:
-        showWarning("Tidak ada provider yang bisa diambil dari Ayumi.\n\n"
-                    "Add-on ayumi_assistant tidak ketemu, atau providernya kosong.")
-        return
-
-    raw = mw.addonManager.getConfig(chatconf.PACKAGE) or {}
-    have = {str(p.get("name", "")).strip()
-            for p in (raw.get("providers") or []) if isinstance(p, dict)}
-    added = [p for p in found
-             if isinstance(p, dict) and str(p.get("name", "")).strip() not in have]
-    if not added:
-        tooltip("Semua provider Ayumi sudah ada di sini.")
-        return
-
-    raw["providers"] = (raw.get("providers") or []) + added
-    if not str(raw.get("active_provider") or "").strip():
-        try:
-            with open(meta, encoding="utf-8") as fh:
-                raw["active_provider"] = (json.load(fh).get("config") or {}).get(
-                    "active_provider", "")
-        except (OSError, ValueError):
-            pass
-    mw.addonManager.writeConfig(chatconf.PACKAGE, raw)
-    tooltip("%d provider dipindahkan dari Ayumi. Buka ulang panel chatnya."
-            % len(added), period=6000)
-    if _dock is not None:
-        _dock._render()
+def _tell_reviewer(show):
+    """Hide the floating overlay while the panel is up, and bring it back when
+    the panel goes away."""
+    try:
+        if mw.state == "review" and mw.reviewer and mw.reviewer.web:
+            mw.reviewer.web.eval(
+                "window.amdRevShow && amdRevShow(%s)" % ("true" if show else "false"))
+    except Exception:
+        pass
 
 
 def register():
@@ -451,9 +439,5 @@ def register():
             act.setShortcut(QKeySequence(keys))
         act.triggered.connect(lambda _=False: toggle())
         mw.form.menuTools.addAction(act)
-
-        grab = QAction("Amadeus: ambil provider dari Ayumi", mw)
-        grab.triggered.connect(lambda _=False: import_from_ayumi())
-        mw.form.menuTools.addAction(grab)
 
     gui_hooks.main_window_did_init.append(setup)

@@ -76,6 +76,8 @@ KIND_DEFAULTS: dict[str, dict[str, str]] = {
 DEFAULTS: dict[str, Any] = {
     "chat_enabled": True,
     "chat_shortcut": "Ctrl+Shift+M",
+    "chat_width": 420,
+    "chat_face_height": 220,
     "persona": DEFAULT_PERSONA,
     "chat_moods": DEFAULT_CHAT_MOODS,
     "active_provider": "",

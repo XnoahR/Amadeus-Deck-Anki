@@ -121,9 +121,9 @@ luar config lewat `api_key_env` (nama environment variable), atau
 **`active_provider`** — nama entri yang dipakai. Bisa juga diganti lewat
 dropdown di panelnya.
 
-Sudah punya provider di add-on **ayumi-assistant**? **Tools → Amadeus: ambil
-provider dari Ayumi** memindahkannya sekaligus, kunci dan semuanya, tanpa perlu
-kamu ketik ulang.
+**`chat_width`** dan **`chat_face_height`** — lebar panel dan tinggi potretnya
+dalam piksel. Bawaan `420` dan `220`. Panelnya juga bisa ditarik-tarik seperti
+dock biasa; angka ini cuma ukuran saat pertama dibuka.
 
 **`send_study_context`** — dia diberi tahu angka belajarmu hari ini: review,
 waktu, streak, jatuh tempo, tunggakan, akurasi. Ini yang membuatnya bisa
@@ -139,3 +139,8 @@ dibuang sebelum ditampilkan.
 
 **`max_history_turns`**, **`max_tokens`**, **`timeout_seconds`** — batas
 percakapan dan permintaan.
+
+**Satu wajah, bukan dua.** Kalau panel chat sedang terbuka waktu kamu review,
+reaksinya muncul di panel itu dan overlay melayangnya menyingkir. Tutup
+panelnya, overlay-nya kembali. Kamu tidak akan pernah melihat dia dua kali di
+layar yang sama.
