@@ -14,6 +14,7 @@ everything else.
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 from typing import Any
@@ -24,7 +25,7 @@ from aqt.qt import (
     QDoubleSpinBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit,
     QPushButton, QSpinBox, QTabWidget, QUrl, QVBoxLayout, QWidget, Qt,
 )
-from aqt.utils import showInfo, tooltip
+from aqt.utils import askUser, showInfo, tooltip
 
 PACKAGE = __name__.split(".")[0]
 
@@ -276,18 +277,42 @@ class Settings(QDialog):
         return w
 
     def _provider_rows(self, form):
-        """One provider, not the whole list. Someone who needs several is
-        already in the raw config, and putting a list editor here would make
-        this page look exactly like the thing it exists to avoid."""
-        entry = self._active_provider()
+        """The whole list, editable here.
+
+        This began as one provider on the grounds that anyone needing several
+        was comfortable in the raw config. That was wrong the moment a second
+        one shipped: adding a model meant hand-editing JSON, which is precisely
+        what this form exists to avoid.
+        """
+        self.providers = [copy.deepcopy(p)
+                          for p in (self.raw.get("providers") or [])
+                          if isinstance(p, dict)]
+        self.p_index = self._active_index()
+
+        self.p_pick = QComboBox(self)
+        self.p_pick.currentIndexChanged.connect(self._switch_provider)
+        add = QPushButton("+ Tambah", self)
+        add.setToolTip("Buat entri model baru")
+        add.clicked.connect(self._add_provider)
+        drop = QPushButton("Hapus", self)
+        drop.setToolTip("Hapus entri ini")
+        drop.clicked.connect(self._drop_provider)
+        bar = QWidget(self)
+        bl = QHBoxLayout(bar)
+        bl.setContentsMargins(0, 0, 0, 0)
+        bl.addWidget(self.p_pick, 1)
+        bl.addWidget(add)
+        bl.addWidget(drop)
+        form.addRow("Model yang dipakai:", bar)
+
         hint = QLabel(PROVIDER_HINT, self)
         hint.setWordWrap(True)
         form.addRow(hint)
 
-        self.p_name = QLineEdit(str(entry.get("name") or ""), self)
-        self.p_model = QLineEdit(str(entry.get("model") or ""), self)
-        self.p_url = QLineEdit(str(entry.get("base_url") or ""), self)
-        self.p_key = QLineEdit(str(entry.get("api_key") or ""), self)
+        self.p_name = QLineEdit(self)
+        self.p_model = QLineEdit(self)
+        self.p_url = QLineEdit(self)
+        self.p_key = QLineEdit(self)
         self.p_key.setEchoMode(QLineEdit.EchoMode.Password)
         show = QPushButton("Lihat", self)
         show.setCheckable(True)
@@ -309,6 +334,18 @@ class Settings(QDialog):
         form.addRow("Alamat API:", self.p_url)
         form.addRow("API key:", keyrow)
 
+        self._refill_picker()
+        self._load_provider(self.p_index)
+
+    # ------------------------------------------------------------- providers
+
+    def _active_index(self):
+        wanted = str(self.raw.get("active_provider") or "").strip()
+        for i, p in enumerate(self.providers):
+            if str(p.get("name", "")).strip() == wanted:
+                return i
+        return 0 if self.providers else -1
+
     def _active_provider(self):
         entries = [p for p in (self.raw.get("providers") or []) if isinstance(p, dict)]
         wanted = str(self.raw.get("active_provider") or "").strip()
@@ -316,6 +353,67 @@ class Settings(QDialog):
             if str(p.get("name", "")).strip() == wanted:
                 return p
         return entries[0] if entries else {}
+
+    def _refill_picker(self):
+        self.p_pick.blockSignals(True)
+        self.p_pick.clear()
+        for i, p in enumerate(self.providers):
+            self.p_pick.addItem(str(p.get("name") or "Provider %d" % (i + 1)))
+        if not self.providers:
+            self.p_pick.addItem("(belum ada)")
+        self.p_pick.setCurrentIndex(max(0, self.p_index))
+        self.p_pick.blockSignals(False)
+
+    def _load_provider(self, index):
+        blank = not (0 <= index < len(self.providers))
+        entry = {} if blank else self.providers[index]
+        for widget, key in ((self.p_name, "name"), (self.p_model, "model"),
+                            (self.p_url, "base_url"), (self.p_key, "api_key")):
+            widget.setText(str(entry.get(key) or ""))
+            widget.setEnabled(not blank)
+
+    def _stash_provider(self):
+        """Fold what is on screen back into the list, so switching entries does
+        not quietly throw away an edit."""
+        if not (0 <= self.p_index < len(self.providers)):
+            return
+        entry = self.providers[self.p_index]
+        entry["name"] = self.p_name.text().strip() or entry.get("name") or "Provider"
+        entry["model"] = self.p_model.text().strip()
+        entry["base_url"] = self.p_url.text().strip()
+        entry["api_key"] = self.p_key.text().strip()
+        entry.setdefault("kind", "openai")
+
+    def _switch_provider(self, index):
+        self._stash_provider()
+        self.p_index = index
+        self._load_provider(index)
+        self._refill_picker()
+
+    def _add_provider(self):
+        self._stash_provider()
+        self.providers.append({"name": "Model baru", "kind": "openai",
+                               "model": "", "base_url": "", "api_key": ""})
+        self.p_index = len(self.providers) - 1
+        self._refill_picker()
+        self._load_provider(self.p_index)
+        self.p_name.setFocus()
+        self.p_name.selectAll()
+
+    def _drop_provider(self):
+        if not (0 <= self.p_index < len(self.providers)):
+            return
+        entry = self.providers[self.p_index]
+        name = entry.get("name") or "entri ini"
+        # Losing a key means going back to the service to make another, so this
+        # one asks first even though nothing else here does.
+        if str(entry.get("api_key") or "").strip():
+            if not askUser("Hapus \"%s\"?\n\nAPI key-nya ikut terhapus." % name):
+                return
+        del self.providers[self.p_index]
+        self.p_index = min(self.p_index, len(self.providers) - 1)
+        self._refill_picker()
+        self._load_provider(self.p_index)
 
     # ---------------------------------------------------------------- saving
 
@@ -332,27 +430,12 @@ class Settings(QDialog):
             else:
                 self.raw[key] = widget.text().strip()
 
-        name = self.p_name.text().strip()
-        if name or self.p_model.text().strip() or self.p_key.text().strip():
-            name = name or "Model saya"
-            entries = [p for p in (self.raw.get("providers") or [])
-                       if isinstance(p, dict)]
-            target = None
-            for p in entries:
-                if str(p.get("name", "")).strip() == str(
-                        self._active_provider().get("name", "")).strip():
-                    target = p
-                    break
-            if target is None:
-                target = {"kind": "openai"}
-                entries.append(target)
-            target["name"] = name
-            target["kind"] = target.get("kind") or "openai"
-            target["model"] = self.p_model.text().strip()
-            target["base_url"] = self.p_url.text().strip()
-            target["api_key"] = self.p_key.text().strip()
-            self.raw["providers"] = entries
-            self.raw["active_provider"] = name
+        self._stash_provider()
+        # Entries keep any field this form never shows -- api_key_env,
+        # system_in_user, extra_headers -- because they were edited in place.
+        self.raw["providers"] = self.providers
+        if 0 <= self.p_index < len(self.providers):
+            self.raw["active_provider"] = self.providers[self.p_index].get("name", "")
 
         mw.addonManager.writeConfig(PACKAGE, self.raw)
         self._refresh()

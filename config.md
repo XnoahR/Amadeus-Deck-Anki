@@ -154,7 +154,11 @@ merepotkan.
 **`persona`** — siapa dia. Ini yang paling berpengaruh. Tulis sebagai perintah,
 bukan deskripsi; model menuruti yang pertama dan mengabaikan yang kedua.
 
-**`providers`** — daftar model. Tiap entri: `name`, `kind` (`openai` untuk semua
+**`providers`** — daftar model. Lebih enak diurus lewat formnya
+(**Tools → Amadeus Deck: pengaturan… → Chat / AI**): di sana ada dropdown untuk
+memilih yang mana, tombol **+ Tambah** dan **Hapus**, dan kolom API key yang
+tersembunyi. Field yang tidak ditampilkan form — seperti `system_in_user` atau
+`api_key_env` — tetap utuh waktu kamu menyimpan dari sana. Tiap entri: `name`, `kind` (`openai` untuk semua
 yang OpenAI-compatible, termasuk OpenRouter; atau `anthropic`), `model`,
 `base_url`, dan kuncinya. Kunci boleh ditaruh langsung di `api_key`, atau di
 luar config lewat `api_key_env` (nama environment variable), atau
