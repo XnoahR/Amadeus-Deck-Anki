@@ -338,7 +338,16 @@ class Settings(QDialog):
         help_btn = QPushButton("Cara dapat API key? →", self)
         help_btn.setToolTip("Membuka panduan di browser (tersedia Indonesia & English)")
         help_btn.clicked.connect(open_guide)
-        form.addRow("", help_btn)
+        self.test_btn = QPushButton("Tes koneksi", self)
+        self.test_btn.setToolTip(
+            "Kirim satu permintaan kecil dan tampilkan apa adanya jawabannya")
+        self.test_btn.clicked.connect(self._test_provider)
+        helprow = QWidget(self)
+        hr = QHBoxLayout(helprow)
+        hr.setContentsMargins(0, 0, 0, 0)
+        hr.addWidget(help_btn, 1)
+        hr.addWidget(self.test_btn)
+        form.addRow("", helprow)
 
         form.addRow("Nama:", self.p_name)
         form.addRow("Model:", self.p_model)
@@ -417,6 +426,53 @@ class Settings(QDialog):
         self._load_provider(self.p_index)
         self.p_name.setFocus()
         self.p_name.selectAll()
+
+    def _test_provider(self):
+        """Send one tiny request and show exactly what came back.
+
+        "400 model is unavailable" from inside a chat panel says nothing about
+        which of the four fields is wrong, or whether the fault is the account
+        rather than the settings. One button that reports the answer verbatim
+        beats guessing at it.
+        """
+        from . import chatconf, providers
+
+        self._stash_provider()
+        if not (0 <= self.p_index < len(self.providers)):
+            return
+        entry = chatconf.normalize_provider(self.providers[self.p_index])
+        try:
+            key = chatconf.resolve_api_key(entry)
+        except chatconf.KeyLookupError as exc:
+            showInfo(str(exc))
+            return
+
+        got = []
+        self.test_btn.setEnabled(False)
+        self.test_btn.setText("Menunggu…")
+
+        def work():
+            providers.stream_completion(
+                entry, key, "Balas dengan satu kata: ok.",
+                [{"role": "user", "content": "ping"}],
+                max_tokens=16, timeout=30,
+                on_text=got.append, on_status=lambda _c: None,
+                should_stop=lambda: False)
+
+        def done(future):
+            self.test_btn.setEnabled(True)
+            self.test_btn.setText("Tes koneksi")
+            try:
+                future.result()
+            except Exception as exc:      # noqa: BLE001 - shown verbatim
+                showInfo("Gagal.\n\nModel: %s\nAlamat: %s\n\n%s"
+                         % (entry["model"], entry["base_url"], exc))
+                return
+            reply = "".join(got).strip()
+            showInfo("Berhasil.\n\nModel: %s\nJawabannya: %s"
+                     % (entry["model"], reply[:120] or "(kosong)"))
+
+        mw.taskman.run_in_background(work, done)
 
     def _drop_provider(self):
         if not (0 <= self.p_index < len(self.providers)):
