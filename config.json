@@ -236,5 +236,7 @@
   "max_history_turns": 10,
   "send_study_context": true,
   "send_card_context": true,
-  "max_context_chars": 900
+  "max_context_chars": 900,
+  "dialog_caret": true,
+  "dialog_caret_char": "▌"
 }

@@ -93,6 +93,14 @@ musik, jadi jangan besar-besar.
 **`dialog_pitch`** — nada dasar dalam Hz. Bawaan `440`. Naikkan untuk suara
 yang lebih tinggi/imut, turunkan untuk yang lebih berat.
 
+**`dialog_caret`** — kursor kedip di ujung teks selagi dia mengetik, seperti
+kursor terminal. Dicabut begitu kalimatnya selesai. Waktu jawabannya masih
+mengalir dari model, kursornya tetap berkedip di sela — itu tanda jujur bahwa
+masih ada yang datang, bukan hiasan.
+
+**`dialog_caret_char`** — bentuk kursornya. Bawaan `▌`. Bisa diganti `_`, `|`,
+`█`, atau apa pun.
+
 **`dialog_every`** — bunyi setiap berapa huruf. Bawaan `3`. Isi `1` kalau mau
 tiap huruf berbunyi, tapi di kalimat panjang itu berubah jadi dengungan.
 

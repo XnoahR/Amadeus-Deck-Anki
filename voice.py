@@ -21,6 +21,8 @@ DEFAULTS = {
     "dialog_volume": 0.16,
     "dialog_pitch": 440,
     "dialog_every": 3,
+    "dialog_caret": True,
+    "dialog_caret_char": "\u258c",
 }
 
 
@@ -40,6 +42,9 @@ def settings(c):
         "vol": round(num("dialog_volume", 0.0, 1.0), 3),
         "pitch": round(num("dialog_pitch", 80, 2000)),
         "every": int(num("dialog_every", 1, 8)),
+        "caret": bool(c.get("dialog_caret", DEFAULTS["dialog_caret"])),
+        "caretChar": str(c.get("dialog_caret_char")
+                         or DEFAULTS["dialog_caret_char"])[:2],
     }
 
 
@@ -48,6 +53,7 @@ function amdVoice(o){
   o = o || {};
   var AC = null, wave = null, tick = null;
   var full = "", node = null, n = 0, streaming = false;
+  var body = null, caret = null, blinker = null;
 
   // A 25% duty pulse, built from its Fourier series. Web Audio only ships a
   // 50% square, which is the fat tone; the NES's thin one is this.
@@ -90,7 +96,36 @@ function amdVoice(o){
     } catch (e) {}
   }
 
-  function stop(){ if (tick) { clearInterval(tick); tick = null; } }
+  function unmount(){
+    if (blinker) { clearInterval(blinker); blinker = null; }
+    if (caret && caret.parentNode) caret.parentNode.removeChild(caret);
+    caret = null;
+  }
+
+  function stop(){
+    if (tick) { clearInterval(tick); tick = null; }
+    unmount();
+  }
+
+  // A text node plus a caret element, rather than writing textContent, because
+  // textContent would wipe the caret on every character.
+  function mount(el){
+    el.textContent = "";
+    body = document.createTextNode("");
+    el.appendChild(body);
+    if (!o.caret) return;
+    caret = document.createElement("span");
+    caret.textContent = o.caretChar || "\u258c";
+    // Blinked from JS rather than a CSS keyframe: the reviewer overlay lives in
+    // a shadow root, where a stylesheet added to the document never reaches it.
+    caret.style.opacity = "1";
+    var on = true;
+    blinker = setInterval(function(){
+      on = !on;
+      caret.style.opacity = on ? "1" : "0";
+    }, 530);
+    el.appendChild(caret);
+  }
 
   // One cursor walking one buffer. say() fills the buffer in one go; a streamed
   // reply grows it while the cursor is still walking, which is why the typing
@@ -98,7 +133,7 @@ function amdVoice(o){
   function step(){
     if (n >= full.length) { if (!streaming) stop(); return; }
     var ch = full.charAt(n++);
-    node.textContent += ch;
+    body.nodeValue = full.slice(0, n);
     var every = o.every || 3;
     // Not on every letter, and never on a pause: one syllable per character is
     // a buzz, and punctuation is where a voice would stop anyway.
@@ -109,7 +144,7 @@ function amdVoice(o){
   function begin(el){
     stop();
     node = el; n = 0;
-    el.textContent = "";
+    mount(el);
     tick = setInterval(step, o.speed);
   }
 
@@ -121,7 +156,8 @@ function amdVoice(o){
       begin(el);
     },
     // A reply that is still being generated: open the line, push what arrives,
-    // close it when the model stops.
+    // close it when the model stops. The caret keeps blinking through the gaps,
+    // which is the honest signal that more is coming.
     open: function(el){
       full = ""; streaming = true;
       if (!o.on) { el.textContent = ""; node = el; return; }
@@ -131,14 +167,18 @@ function amdVoice(o){
       full += (text == null) ? "" : String(text);
       if (!o.on && node) node.textContent = full;
     },
-    close: function(){ streaming = false; if (!tick && node) node.textContent = full; },
+    close: function(){
+      streaming = false;
+      if (!tick && node) { node.textContent = full; unmount(); }
+    },
     text: function(){ return full; },
     // Clicking mid-line finishes it, the way every visual novel does, instead of
     // throwing the sentence away for a new one nobody asked for. Mid-stream it
     // catches up to whatever has arrived and keeps going.
     skip: function(){
       if (!tick) return false;
-      if (node) node.textContent = full;
+      if (body) body.nodeValue = full;
+      else if (node) node.textContent = full;
       n = full.length;
       if (!streaming) stop();
       return true;
