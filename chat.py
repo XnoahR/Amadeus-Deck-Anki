@@ -36,6 +36,74 @@ STORE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                      "user_files", "chat.json")
 
 
+class ThoughtFilter:
+    """Drop the model's reasoning before anyone sees it.
+
+    Some models narrate their thinking inline, wrapped in <thought> or <think>,
+    and the OpenAI-compatible layer hands it over as ordinary content. Left
+    alone it lands in the panel: three paragraphs of the model talking to itself
+    about you, in front of you.
+
+    The stream arrives in arbitrary pieces, so a tag routinely straddles two of
+    them. Anything that could still turn into an opening tag is held back rather
+    than emitted and regretted.
+    """
+
+    TAGS = (("<thought>", "</thought>"), ("<think>", "</think>"),
+            ("<reasoning>", "</reasoning>"))
+
+    def __init__(self):
+        self.buf = ""
+        self.closing = None
+
+    def _safe_cut(self, text):
+        """How much can be released without risking half a tag."""
+        cut = text.rfind("<")
+        if cut < 0:
+            return len(text)
+        tail = text[cut:]
+        return cut if any(o.startswith(tail) for o, _c in self.TAGS) else len(text)
+
+    def feed(self, delta):
+        self.buf += delta or ""
+        out = []
+        while self.buf:
+            if self.closing:
+                at = self.buf.find(self.closing)
+                if at < 0:
+                    # still inside: throw the thinking away, but keep enough
+                    # tail that a split closing tag is still recognisable
+                    keep = len(self.closing) - 1
+                    self.buf = self.buf[-keep:] if keep else ""
+                    break
+                self.buf = self.buf[at + len(self.closing):]
+                self.closing = None
+                continue
+
+            found, opener, closer = None, None, None
+            for open_tag, close_tag in self.TAGS:
+                at = self.buf.find(open_tag)
+                if at >= 0 and (found is None or at < found):
+                    found, opener, closer = at, open_tag, close_tag
+            if found is None:
+                cut = self._safe_cut(self.buf)
+                out.append(self.buf[:cut])
+                self.buf = self.buf[cut:]
+                break
+            out.append(self.buf[:found])
+            self.buf = self.buf[found + len(opener):]
+            self.closing = closer
+        return "".join(out)
+
+    def flush(self):
+        """Whatever was held back, unless the model stopped mid-thought."""
+        if self.closing:
+            self.buf = ""
+            return ""
+        out, self.buf = self.buf, ""
+        return out
+
+
 class MoodHead:
     """She is asked to open with a face tag. Hold the first few characters back
     until it can be recognised, so it never flickers on screen before it gets
@@ -335,6 +403,7 @@ class ChatDock(QDockWidget):
         self._stop = threading.Event()
         self._busy = False
         self._head: MoodHead | None = None
+        self._thoughts = ThoughtFilter()
         self._mood = "normal"
         self._moods: Any = {}
 
@@ -472,6 +541,7 @@ class ChatDock(QDockWidget):
         self._stop.clear()
         self._moods = cfg["chat_moods"]
         self._head = MoodHead(self._moods)
+        self._thoughts = ThoughtFilter()
         self._mood = "normal"
         self.send_btn.setText("Stop")
         self._say("status", "%s memikirkan…" % provider["model"])
@@ -479,8 +549,13 @@ class ChatDock(QDockWidget):
         reply: list[str] = []
 
         def on_text(delta):
-            reply.append(delta)
-            mood, shown = self._head.feed(delta)
+            # Reasoning is stripped before anything else looks at the text: the
+            # face tag comes after it, and history should not carry it either.
+            visible = self._thoughts.feed(delta)
+            if not visible:
+                return
+            reply.append(visible)
+            mood, shown = self._head.feed(visible)
             def apply():
                 if mood:
                     self._mood = mood
@@ -512,6 +587,12 @@ class ChatDock(QDockWidget):
     def _finish(self, whole, error):
         self._busy = False
         self.send_btn.setText("Kirim")
+        tail = self._thoughts.flush()
+        if tail:
+            whole += tail
+            _mood, shown = self._head.feed(tail) if self._head else (None, tail)
+            if shown:
+                self._say("push", shown)
         left = self._head.flush() if self._head else ""
         if left:
             self._say("push", left)
