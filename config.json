@@ -190,5 +190,49 @@
       "sided_thinking"
     ]
   },
-  "check_updates": true
+  "check_updates": true,
+  "chat_enabled": true,
+  "chat_shortcut": "Ctrl+Shift+M",
+  "persona": "Kamu Amadeus, pendamping belajar yang tinggal di dalam Anki-nya pengguna.\nKamu tajam, sedikit sarkastik, dan diam-diam peduli. Kamu tidak memuji berlebihan dan tidak menceramahi.\nJawab dalam bahasa yang dipakai pengguna. Pendek -- dua sampai empat kalimat, kecuali dia minta penjelasan panjang.\nKamu bukan asisten serbaguna. Kalau dia bertanya di luar belajar, jawab seperlunya lalu bawa balik.",
+  "chat_moods": {
+    "normal": [
+      "normal",
+      "indifferent"
+    ],
+    "happy": [
+      "happy",
+      "winking",
+      "sided_pleasant"
+    ],
+    "thinking": [
+      "sided_thinking",
+      "sided_pleasant",
+      "normal"
+    ],
+    "sad": [
+      "sad",
+      "disappointed"
+    ],
+    "annoyed": [
+      "annoyed",
+      "pissed",
+      "angry"
+    ],
+    "blush": [
+      "blush",
+      "sided_blush"
+    ],
+    "surprised": [
+      "sided_surprised",
+      "sided_worried"
+    ]
+  },
+  "active_provider": "",
+  "providers": [],
+  "max_tokens": 1200,
+  "timeout_seconds": 90,
+  "max_history_turns": 10,
+  "send_study_context": true,
+  "send_card_context": true,
+  "max_context_chars": 900
 }

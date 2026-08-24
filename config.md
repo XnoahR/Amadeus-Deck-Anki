@@ -102,3 +102,40 @@ di dalamnya.
 
 **`check_updates`** — cek sekali sehari apakah ada versi baru di GitHub.
 Matikan kalau tidak mau add-on ini menghubungi internet sama sekali.
+
+### Chat
+
+Dia bisa diajak bicara: **Tools → Amadeus: buka chat** (atau `Ctrl+Shift+M`).
+Jawabannya diketik dengan suara 8-bit yang sama, dan potretnya berganti ikut
+nada jawabannya.
+
+**`persona`** — siapa dia. Ini yang paling berpengaruh. Tulis sebagai perintah,
+bukan deskripsi; model menuruti yang pertama dan mengabaikan yang kedua.
+
+**`providers`** — daftar model. Tiap entri: `name`, `kind` (`openai` untuk semua
+yang OpenAI-compatible, termasuk OpenRouter; atau `anthropic`), `model`,
+`base_url`, dan kuncinya. Kunci boleh ditaruh langsung di `api_key`, atau di
+luar config lewat `api_key_env` (nama environment variable), atau
+`api_key_file` + `api_key_path` (jalur bertitik ke dalam sebuah file JSON).
+
+**`active_provider`** — nama entri yang dipakai. Bisa juga diganti lewat
+dropdown di panelnya.
+
+Sudah punya provider di add-on **ayumi-assistant**? **Tools → Amadeus: ambil
+provider dari Ayumi** memindahkannya sekaligus, kunci dan semuanya, tanpa perlu
+kamu ketik ulang.
+
+**`send_study_context`** — dia diberi tahu angka belajarmu hari ini: review,
+waktu, streak, jatuh tempo, tunggakan, akurasi. Ini yang membuatnya bisa
+menyinggung tunggakanmu tanpa ditanya. Matikan kalau tidak mau angka itu
+dikirim ke layanan model.
+
+**`send_card_context`** — kalau ada kartu terbuka, isinya ikut dikirim supaya
+dia bisa ditanya soal kartu itu.
+
+**`chat_moods`** — ekspresi mana yang dipakai untuk tiap nada jawaban. Dia
+diminta membuka balasannya dengan penanda seperti `[happy]`; penandanya
+dibuang sebelum ditampilkan.
+
+**`max_history_turns`**, **`max_tokens`**, **`timeout_seconds`** — batas
+percakapan dan permintaan.

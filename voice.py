@@ -46,7 +46,8 @@ def settings(c):
 JS = r"""
 function amdVoice(o){
   o = o || {};
-  var AC = null, wave = null, tick = null, full = "", node = null, n = 0;
+  var AC = null, wave = null, tick = null;
+  var full = "", node = null, n = 0, streaming = false;
 
   // A 25% duty pulse, built from its Fourier series. Web Audio only ships a
   // 50% square, which is the fat tone; the NES's thin one is this.
@@ -91,29 +92,55 @@ function amdVoice(o){
 
   function stop(){ if (tick) { clearInterval(tick); tick = null; } }
 
+  // One cursor walking one buffer. say() fills the buffer in one go; a streamed
+  // reply grows it while the cursor is still walking, which is why the typing
+  // rhythm survives a model that arrives in bursts.
+  function step(){
+    if (n >= full.length) { if (!streaming) stop(); return; }
+    var ch = full.charAt(n++);
+    node.textContent += ch;
+    var every = o.every || 3;
+    // Not on every letter, and never on a pause: one syllable per character is
+    // a buzz, and punctuation is where a voice would stop anyway.
+    if (n % every === 0 && ch.trim() &&
+        "、。，．！？…!?,.:;「」『』\"'".indexOf(ch) < 0) blip(ch);
+  }
+
+  function begin(el){
+    stop();
+    node = el; n = 0;
+    el.textContent = "";
+    tick = setInterval(step, o.speed);
+  }
+
   return {
     say: function(el, text){
       stop();
-      node = el; full = (text == null) ? "" : String(text);
+      node = el; full = (text == null) ? "" : String(text); streaming = false;
       if (!o.on || !full) { el.textContent = full; return; }
-      el.textContent = ""; n = 0;
-      var every = o.every || 3;
-      tick = setInterval(function(){
-        if (n >= full.length) { stop(); return; }
-        var ch = full.charAt(n++);
-        el.textContent += ch;
-        // Not on every letter, and never on a pause: one syllable per character
-        // is a buzz, and punctuation is where a voice would stop anyway.
-        if (n % every === 0 && ch.trim() &&
-            "、。，．！？…!?,.:;「」『』\"'".indexOf(ch) < 0) blip(ch);
-      }, o.speed);
+      begin(el);
     },
+    // A reply that is still being generated: open the line, push what arrives,
+    // close it when the model stops.
+    open: function(el){
+      full = ""; streaming = true;
+      if (!o.on) { el.textContent = ""; node = el; return; }
+      begin(el);
+    },
+    push: function(text){
+      full += (text == null) ? "" : String(text);
+      if (!o.on && node) node.textContent = full;
+    },
+    close: function(){ streaming = false; if (!tick && node) node.textContent = full; },
+    text: function(){ return full; },
     // Clicking mid-line finishes it, the way every visual novel does, instead of
-    // throwing the sentence away for a new one nobody asked for.
+    // throwing the sentence away for a new one nobody asked for. Mid-stream it
+    // catches up to whatever has arrived and keeps going.
     skip: function(){
       if (!tick) return false;
-      stop();
       if (node) node.textContent = full;
+      n = full.length;
+      if (!streaming) stop();
       return true;
     },
     // Call from inside a real click handler: resuming from a timer tick is not
