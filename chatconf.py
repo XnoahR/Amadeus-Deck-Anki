@@ -52,7 +52,9 @@ MOOD_RULE = (
     "Pilih satu dari: %s.\n"
     "Pakai kurung siku [ ], bukan kurung biasa. Jangan pernah menyebut "
     "penanda itu di dalam kalimatmu, dan jangan menaruhnya di tengah atau di "
-    "akhir balasan."
+    "akhir balasan.\n"
+    "Tulis balasannya saja. Jangan menuliskan proses berpikirmu, rencanamu, "
+    "atau alasan memilih penanda -- itu terbaca oleh dia."
 )
 
 PROVIDER_FIELDS: dict[str, Any] = {

@@ -126,7 +126,7 @@ class ThoughtFilter:
 class MoodHead:
     """She is asked to open with a face tag. Hold the first few characters back
     until it can be recognised, so it never flickers on screen before it gets
-    stripped, and release everything held back if it never comes.
+    stripped.
 
     Both bracket shapes are accepted because models pick one and stick to it,
     and which one is not something a prompt reliably decides. They are not
@@ -134,6 +134,20 @@ class MoodHead:
     inside, while `(...)` is ordinary punctuation, so it is only taken as a tag
     when it names a mood we actually have. Otherwise an opening aside -- "(Ya,
     lagi.) Kartunya..." -- would silently lose its first clause.
+
+    Whatever arrives *before* the tag is not hers. Some models narrate their
+    planning in plain prose -- no <think> for ThoughtFilter to catch, just
+    paragraphs of the model talking about how to answer -- and the real reply
+    follows underneath. Others are handed an opening <think> by their own chat
+    template, so they emit the closing tag and nothing else to pair it with.
+
+    Both look the same from here: the reply does not begin with a tag. So it is
+    held back whole and cut at the end, at the *last* face tag in it -- that
+    narration routinely quotes the tag it was told to use, so the first one is
+    the wrong one -- or failing that, after a closing thought tag. If neither is
+    there, everything is released: a reply with no face is still worth showing.
+    The delay costs only the moment before the typewriter starts, because the
+    typing itself happens in the panel, not here.
     """
 
     LIMIT = 40
@@ -143,43 +157,86 @@ class MoodHead:
         self.allowed = {str(a).strip().lower() for a in allowed}
         self.buf = ""
         self.done = False
-
-    def _release(self):
-        out, self.buf, self.done = self.buf, "", True
-        return None, out
+        self.stray = False    # no tag at the front: hold it all, decide at the end
+        self.mood = None      # what flush() found, since it can only return text
 
     def feed(self, delta):
         """-> (mood or None, text to display)"""
         if self.done:
             return None, delta
         self.buf += delta
+        if self.stray:
+            return None, ""
         head = self.buf.lstrip()
         if not head:
             return None, ""
 
         shut = self.PAIRS.get(head[0])
         if shut is None:
-            return self._release()
+            self.stray = True
+            return None, ""
 
         close = head.find(shut)
         if close < 0:
             if len(head) > self.LIMIT:      # not a tag after all
-                return self._release()
+                self.stray = True
             return None, ""                 # still waiting for the rest
 
         name = head[1:close].strip().lower()
         known = name in self.allowed
         if head[0] != "[" and not known:
             # a real parenthesis, not a face tag
-            return self._release()
+            self.stray = True
+            return None, ""
 
         self.done = True
         self.buf = ""
-        return (name if known else None), head[close + 1:].lstrip()
+        self.mood = name if known else None
+        return self.mood, head[close + 1:].lstrip()
+
+    def _cut(self, text):
+        """Find where her actual reply starts inside a reply that opened with
+        something else. -> (mood, the rest) or (None, None) if nothing is sure.
+
+        Mid-prose the bar is higher than at the front: a bracket only counts
+        when it names a mood we have, because arbitrary square brackets show up
+        in ordinary writing. A tag with nothing after it does not count either
+        -- that is the model quoting the instruction, not answering.
+        """
+        found = None
+        for i, ch in enumerate(text):
+            shut = self.PAIRS.get(ch)
+            if shut is None:
+                continue
+            close = text.find(shut, i + 1)
+            if close < 0 or close - i > self.LIMIT:
+                continue
+            name = text[i + 1:close].strip().lower()
+            rest = text[close + 1:].lstrip()
+            if name in self.allowed and rest:
+                found = (name, rest)
+        if found:
+            return found
+
+        after = -1
+        for _open_tag, close_tag in ThoughtFilter.TAGS:
+            at = text.rfind(close_tag)
+            if at >= 0:
+                after = max(after, at + len(close_tag))
+        if after >= 0 and text[after:].strip():
+            return None, text[after:].lstrip()
+        return None, None
 
     def flush(self):
         out, self.buf, self.done = self.buf, "", True
-        return out
+        if not self.stray:
+            return out
+        self.stray = False
+        mood, body = self._cut(out)
+        if body is None:
+            return out
+        self.mood = mood
+        return body
 
 
 def load_turns():
@@ -770,6 +827,12 @@ class ChatDock(QDockWidget):
                 self._say("push", shown)
         left = self._head.flush() if self._head else ""
         if left:
+            # A reply that did not open with a tag is only settled at flush, so
+            # the face it asked for arrives together with the text rather than
+            # ahead of it -- and before the turn is stored, which reads _mood.
+            if self._head.mood:
+                self._mood = self._head.mood
+                self._say("mood", self._head.mood)
             self._say("push", left)
         self._say("close")
         if error is not None:
