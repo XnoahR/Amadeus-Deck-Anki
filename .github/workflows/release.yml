@@ -47,7 +47,7 @@ jobs:
           zip -q -r dist/AmadeusDeck.ankiaddon \
             *.py \
             config.json config.md manifest.json LICENSE character/README.txt \
-            guide/apikey.html
+            guide
           unzip -l dist/AmadeusDeck.ankiaddon
 
       - uses: actions/upload-artifact@v4

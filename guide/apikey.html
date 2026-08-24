@@ -33,6 +33,9 @@
   table{border-collapse:collapse;width:100%;margin:6px 0 16px;font-size:14px}
   td,th{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
   th{background:var(--card);font-weight:600;width:34%}
+  figure{margin:14px 0 18px}
+  figure img{display:block;width:100%;height:auto;border:1px solid var(--line)}
+  figcaption{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.5}
   .note{border-left:2px solid var(--edge);background:var(--card);padding:11px 15px;
         margin:16px 0;font-size:14px}
   .warn{border-left-color:#ffb200}
@@ -91,8 +94,14 @@
   <h2>Pilihan 2 — Google AI Studio (Gemma)</h2>
   <ol>
     <li>Buka <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>
-      dan masuk dengan akun Google.</li>
-    <li>Klik <b>Create API key</b>, lalu salin kuncinya.</li>
+      dan masuk dengan akun Google. Kamu akan sampai di halaman daftar API key:
+      <figure><img src="img/gemini-keys.png" alt="Halaman API Keys di Google AI Studio">
+      <figcaption>Kolom kunci dan project sengaja dikaburkan.</figcaption></figure></li>
+    <li>Klik <b>Create API key</b> di pojok kanan atas. Beri nama, pilih project
+      (<code>Default Gemini Project</code> sudah cukup), lalu <b>Create key</b>:
+      <figure><img src="img/gemini-create.png" alt="Dialog Create a new key"></figure></li>
+    <li><b>Salin kuncinya.</b> Lalu isi di Anki: <b>Tools → Amadeus Deck:
+      pengaturan… → Chat / AI</b>.</li>
   </ol>
   <table>
     <tr><th>Nama</th><td>misalnya <code>Google Gemma</code></td></tr>
@@ -100,6 +109,13 @@
     <tr><th>Alamat API</th>
       <td><code>https://generativelanguage.googleapis.com/v1beta/openai</code></td></tr>
   </table>
+  <div class="note warn">
+    <p style="margin:0">Kalau kamu sudah punya kunci lama yang ditandai
+      <b>Unrestricted</b>, kunci itu <b>sudah berhenti bekerja</b> — Google
+      mematikannya sejak 19 Juni 2026. Tambahkan pembatasan lewat tombol
+      <b>Secure keys</b> di halaman itu, atau buat kunci baru. Kunci yang dibuat
+      sekarang sudah otomatis aman.</p>
+  </div>
   <div class="note">
     <p style="margin:0">Model ini menarasikan penalarannya sebelum menjawab.
       Add-on ini membuangnya, jadi yang kamu lihat cuma jawabannya. Kalau suatu
@@ -212,8 +228,14 @@
   <h2>Option 2 — Google AI Studio (Gemma)</h2>
   <ol>
     <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>
-      and sign in with a Google account.</li>
-    <li>Click <b>Create API key</b> and copy it.</li>
+      and sign in with a Google account. You land on the API key list:
+      <figure><img src="img/gemini-keys.png" alt="The API Keys page in Google AI Studio">
+      <figcaption>The key and project columns are blurred on purpose.</figcaption></figure></li>
+    <li>Click <b>Create API key</b> at the top right. Name it, pick a project
+      (<code>Default Gemini Project</code> is fine), then <b>Create key</b>:
+      <figure><img src="img/gemini-create.png" alt="The Create a new key dialog"></figure></li>
+    <li><b>Copy the key.</b> Then fill it in under <b>Tools → Amadeus Deck:
+      pengaturan… → Chat / AI</b>.</li>
   </ol>
   <table>
     <tr><th>Nama (name)</th><td>e.g. <code>Google Gemma</code></td></tr>
@@ -221,6 +243,12 @@
     <tr><th>Alamat API (API address)</th>
       <td><code>https://generativelanguage.googleapis.com/v1beta/openai</code></td></tr>
   </table>
+  <div class="note warn">
+    <p style="margin:0">If you have an older key marked <b>Unrestricted</b>, it
+      <b>has already stopped working</b> — Google switched those off on 19 June
+      2026. Add restrictions with the <b>Secure keys</b> button on that page, or
+      make a new one. Keys created now are restricted from the start.</p>
+  </div>
   <div class="note">
     <p style="margin:0">This model narrates its reasoning before answering. The
       add-on strips that, so you only see the reply. If you ever use a model
