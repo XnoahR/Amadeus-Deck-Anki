@@ -20,7 +20,7 @@
   "reviewer_always_visible": true,
   "reviewer_hide_seconds": 5,
   "effects": true,
-  "grain_opacity": 0.3,
+  "grain_opacity": 0.45,
   "chatter_seconds": 40,
   "typewriter": true,
   "typewriter_speed": 26,

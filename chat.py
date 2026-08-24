@@ -371,7 +371,10 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   // A tile made once and repeated. Shipping a PNG would mean another file
   // routed through the add-on's web exports for no benefit.
   if (%(grainon)s){
-    var N=64, cv=document.createElement("canvas"); cv.width=cv.height=N;
+    // 96 rather than 64: at any strength worth seeing, a 64px tile starts
+    // reading as a repeating pattern instead of as grain. Costs 20 KB in
+    // the page against 9, and buys the repeat being hard to spot.
+    var N=96, cv=document.createElement("canvas"); cv.width=cv.height=N;
     var cx=cv.getContext("2d"), id=cx.createImageData(N,N);
     // Alpha acak, bukan blend mode: 'overlay' di atas latar nyaris hitam
     // menghasilkan simpangan 1 dari 255 -- ada, tapi tak terlihat. Butiran
@@ -467,7 +470,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
        # ground and on paper, so there is one number here rather than a light
        # and a dark one -- and the number is what it is because 0.22 measured
        # as present-but-unnoticeable on the panel it actually ships on.
-       "grain": "%.2f" % max(0.0, min(float(cfg.get("grain_opacity") or 0.30), 1.0)),
+       "grain": "%.2f" % max(0.0, min(float(cfg.get("grain_opacity") or 0.45), 1.0)),
        "grainon": "true" if cfg.get("effects", True) else "false"}
 
 
