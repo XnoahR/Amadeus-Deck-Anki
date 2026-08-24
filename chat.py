@@ -14,6 +14,7 @@ speaking evenly.
 from __future__ import annotations
 
 import json
+import os
 import threading
 from typing import Any
 
@@ -28,6 +29,11 @@ from aqt.webview import AnkiWebView
 from . import cardctx, chatconf, providers, voice
 
 DOCK_NAME = "amadeusChatDock"
+# Anki keeps user_files across add-on updates, which is the whole point: a
+# conversation that vanishes on restart is what makes her feel like she does not
+# know you.
+STORE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     "user_files", "chat.json")
 
 
 class MoodHead:
@@ -87,6 +93,37 @@ class MoodHead:
     def flush(self):
         out, self.buf, self.done = self.buf, "", True
         return out
+
+
+def load_turns():
+    try:
+        with open(STORE, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return []
+    if not isinstance(data, list):
+        return []
+    return [t for t in data
+            if isinstance(t, dict) and t.get("role") in ("user", "assistant")
+            and isinstance(t.get("content"), str)]
+
+
+def save_turns(turns, keep):
+    """Kept as plain JSON beside the add-on, on purpose: a memory you cannot
+    open and read is one you cannot correct."""
+    try:
+        os.makedirs(os.path.dirname(STORE), exist_ok=True)
+        with open(STORE, "w", encoding="utf-8") as fh:
+            json.dump(turns[-max(2, int(keep)):], fh, ensure_ascii=False, indent=1)
+    except OSError:
+        pass
+
+
+def forget_turns():
+    try:
+        os.remove(STORE)
+    except OSError:
+        pass
 
 
 def study_summary():
@@ -179,6 +216,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
     push:function(t){if(live){V.push(t);bottom()}},
     close:function(){V.close();live=null;bottom()},
     said:function(t){V.say(row("her"),t);bottom()},
+    past:function(role,t){row(role==="user"?"me":"her").textContent=t;bottom()},
     status:function(t){status.textContent=t||""},
     clear:function(){log.innerHTML="";status.textContent=""}
   };
@@ -207,7 +245,7 @@ class ChatDock(QDockWidget):
                          | QDockWidget.DockWidgetFeature.DockWidgetMovable
                          | QDockWidget.DockWidgetFeature.DockWidgetFloatable)
 
-        self._turns: list[dict[str, str]] = []
+        self._turns: list[dict[str, str]] = load_turns()
         self._stop = threading.Event()
         self._busy = False
         self._head: MoodHead | None = None
@@ -227,6 +265,10 @@ class ChatDock(QDockWidget):
         self.picker = QComboBox(box)
         self.picker.currentTextChanged.connect(self._pick_provider)
         row.addWidget(self.picker, 1)
+        self.forget_btn = QPushButton("Lupakan", box)
+        self.forget_btn.setToolTip("Hapus percakapan yang tersimpan")
+        self.forget_btn.clicked.connect(self._forget)
+        row.addWidget(self.forget_btn)
         self.send_btn = QPushButton("Kirim", box)
         self.send_btn.clicked.connect(self._send)
         row.addWidget(self.send_btn)
@@ -263,6 +305,9 @@ class ChatDock(QDockWidget):
         if active and active["name"] in names:
             self.picker.setCurrentText(active["name"])
         self.picker.blockSignals(False)
+        if cfg["remember_chat"]:
+            for turn in self._turns[-int(cfg["remember_messages"]):]:
+                self._say("past", turn["role"], turn["content"])
 
     def _eval(self, js):
         try:
@@ -278,6 +323,12 @@ class ChatDock(QDockWidget):
         if message == "amd_chat_poke":
             self._say("mood", "happy")
         return False
+
+    def _forget(self):
+        self._turns = []
+        forget_turns()
+        self._say("clear")
+        tooltip("Percakapan dilupakan.")
 
     def _pick_provider(self, name):
         if name and not name.startswith("("):
@@ -373,6 +424,9 @@ class ChatDock(QDockWidget):
             _mood, body = strip.feed(text)
             body += strip.flush()
             self._turns.append({"role": "assistant", "content": (body or text).strip()})
+        cfg = chatconf.load()
+        if cfg["remember_chat"]:
+            save_turns(self._turns, cfg["remember_messages"])
 
     def _history(self, cfg, text):
         out = []

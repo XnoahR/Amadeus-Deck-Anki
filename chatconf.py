@@ -91,6 +91,9 @@ DEFAULTS: dict[str, Any] = {
     "max_tokens": 1200,
     "timeout_seconds": 90,
     "max_history_turns": 10,
+    "about_you": "",
+    "remember_chat": True,
+    "remember_messages": 24,
     "send_study_context": True,
     "send_card_context": True,
     "max_context_chars": 900,
@@ -239,6 +242,13 @@ def system_prompt(cfg: dict[str, Any], study: str = "") -> str:
     parts = [fill(cfg.get("persona") or DEFAULT_PERSONA, name=her, user=you).strip()]
     moods = ", ".join(sorted(cfg["chat_moods"]))
     parts.append(MOOD_RULE % moods)
+    about = str(cfg.get("about_you") or "").strip()
+    if about:
+        # Written by the user, not inferred by the model. Standing facts belong
+        # in the prompt every turn; what she worked out mid-conversation does
+        # not, because a wrong guess would then outlive the conversation.
+        parts.append("Yang perlu kamu ingat tentang %s:\n%s"
+                     % (you, fill(about, name=her, user=you).strip()))
     if study:
         parts.append("Keadaan belajarnya hari ini:\n" + study)
     return "\n\n".join(parts)

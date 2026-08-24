@@ -167,6 +167,19 @@ dropdown di panelnya.
 dalam piksel. Bawaan `420` dan `220`. Panelnya juga bisa ditarik-tarik seperti
 dock biasa; angka ini cuma ukuran saat pertama dibuka.
 
+**`about_you`** — hal tetap tentang kamu yang selalu dia tahu: sedang kejar
+N2 Desember, benci kanji, maunya dijawab pendek. **Kamu yang menulisnya**, bukan
+dia yang menyimpulkan — kesimpulan yang keliru akan terkirim ulang di tiap
+percakapan berikutnya selamanya.
+
+**`remember_chat`** — percakapan bertahan setelah Anki ditutup. Tersimpan
+sebagai JSON biasa di `user_files/chat.json`: memory yang tidak bisa kamu buka
+dan baca adalah memory yang tidak bisa kamu betulkan. Tombol **Lupakan** di
+panel chat menghapusnya.
+
+**`remember_messages`** — berapa pesan terakhir yang disimpan. Bawaan `24`.
+Ingat, semua yang dia ingat ikut dikirim ke model tiap giliran.
+
 **`send_study_context`** — dia diberi tahu angka belajarmu hari ini: review,
 waktu, streak, jatuh tempo, tunggakan, akurasi. Ini yang membuatnya bisa
 menyinggung tunggakanmu tanpa ditanya. Matikan kalau tidak mau angka itu

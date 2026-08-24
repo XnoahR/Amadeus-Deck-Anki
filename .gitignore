@@ -11,3 +11,4 @@ notes.json
 
 __pycache__/
 *.pyc
+user_files/
