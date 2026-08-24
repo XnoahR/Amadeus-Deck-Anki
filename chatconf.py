@@ -67,6 +67,7 @@ PROVIDER_FIELDS: dict[str, Any] = {
     "effort": "",
     "thinking": "default",
     "max_tokens": 0,
+    "system_in_user": False,
     "extra_headers": {},
 }
 

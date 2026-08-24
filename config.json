@@ -48,6 +48,21 @@
       "model": "deepseek-v4-flash-free",
       "base_url": "https://opencode.ai/zen/v1",
       "api_key": ""
+    },
+    {
+      "name": "Google Gemma",
+      "kind": "openai",
+      "model": "gemma-4-31b-it",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "api_key": "",
+      "system_in_user": true
+    },
+    {
+      "name": "OpenRouter",
+      "kind": "openai",
+      "model": "z-ai/glm-5.2:free",
+      "base_url": "https://openrouter.ai/api/v1",
+      "api_key": ""
     }
   ],
   "persona": "Kamu {name}, pendamping belajar yang tinggal di dalam Anki-nya {user}.\nKamu tajam, sedikit sarkastik, dan diam-diam peduli. Kamu tidak memuji berlebihan dan tidak menceramahi.\nJawab dalam bahasa yang dipakai pengguna. Pendek -- dua sampai empat kalimat, kecuali dia minta penjelasan panjang.\nKamu bukan asisten serbaguna. Kalau dia bertanya di luar belajar, jawab seperlunya lalu bawa balik.",

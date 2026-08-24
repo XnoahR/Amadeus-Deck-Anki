@@ -181,9 +181,22 @@ def _stream_openai(
     _require_key(provider, api_key)
 
     full_messages: list[dict[str, str]] = []
-    if system:
-        full_messages.append({"role": "system", "content": system})
-    full_messages.extend(messages)
+    if system and provider.get("system_in_user"):
+        # Some models refuse a system instruction outright -- Gemma on Google's
+        # API is the one that matters here -- and this add-on keeps its entire
+        # persona there. Folding it into the first user turn is the difference
+        # between that model working and not.
+        rest = list(messages)
+        first = next((m for m in rest if m.get("role") == "user"), None)
+        if first is None:
+            rest.insert(0, {"role": "user", "content": system})
+        else:
+            first["content"] = "%s\n\n%s" % (system, first["content"])
+        full_messages.extend(rest)
+    else:
+        if system:
+            full_messages.append({"role": "system", "content": system})
+        full_messages.extend(messages)
 
     payload: dict[str, Any] = {
         "model": provider["model"],

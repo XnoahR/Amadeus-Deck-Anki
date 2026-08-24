@@ -160,6 +160,11 @@ yang OpenAI-compatible, termasuk OpenRouter; atau `anthropic`), `model`,
 luar config lewat `api_key_env` (nama environment variable), atau
 `api_key_file` + `api_key_path` (jalur bertitik ke dalam sebuah file JSON).
 
+Satu field khusus: **`system_in_user`**. Model Gemma di Google menolak system
+instruction, padahal persona Amadeus tinggal di sana. Dinyalakan berarti
+personanya digabungkan ke pesan pertamamu. Provider Google bawaan sudah
+menyalakannya.
+
 **`active_provider`** — nama entri yang dipakai. Bisa juga diganti lewat
 dropdown di panelnya.
 

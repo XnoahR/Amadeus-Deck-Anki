@@ -61,7 +61,7 @@
 <div data-lang="id">
   <h1>Cara dapat API key</h1>
   <p class="lead">Supaya Amadeus bisa diajak bicara, dia butuh satu model bahasa
-    untuk menjawab. Ada dua tempat yang gampang, dan keduanya punya model gratis.
+    untuk menjawab. Ada tiga tempat yang gampang, dan semuanya punya pilihan gratis.
     Sekitar lima menit.</p>
 
   <h2>Pilihan 1 — OpenCode Zen <span style="color:var(--edge)">(disarankan)</span></h2>
@@ -88,7 +88,27 @@
       yang lain dari daftar.</p>
   </div>
 
-  <h2>Pilihan 2 — OpenRouter</h2>
+  <h2>Pilihan 2 — Google AI Studio (Gemma)</h2>
+  <ol>
+    <li>Buka <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>
+      dan masuk dengan akun Google.</li>
+    <li>Klik <b>Create API key</b>, lalu salin kuncinya.</li>
+  </ol>
+  <table>
+    <tr><th>Nama</th><td>misalnya <code>Google Gemma</code></td></tr>
+    <tr><th>Model</th><td><code>gemma-4-31b-it</code></td></tr>
+    <tr><th>Alamat API</th>
+      <td><code>https://generativelanguage.googleapis.com/v1beta/openai</code></td></tr>
+  </table>
+  <div class="note">
+    <p style="margin:0">Model Gemma di Google <b>tidak menerima system
+      instruction</b>, padahal seluruh kepribadian Amadeus tinggal di sana.
+      Add-on ini sudah menanganinya: untuk provider ini, personanya digabungkan
+      ke pesan pertamamu. Kalau kamu menambah provider Gemma sendiri lewat
+      config lanjutan, nyalakan <code>system_in_user</code>.</p>
+  </div>
+
+  <h2>Pilihan 3 — OpenRouter</h2>
   <ol>
     <li>Buka <a href="https://openrouter.ai" target="_blank">openrouter.ai</a>,
       klik <b>Sign in</b>. Bisa pakai Google atau GitHub.</li>
@@ -179,7 +199,27 @@
       likely been withdrawn; pick another from the list.</p>
   </div>
 
-  <h2>Option 2 — OpenRouter</h2>
+  <h2>Option 2 — Google AI Studio (Gemma)</h2>
+  <ol>
+    <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>
+      and sign in with a Google account.</li>
+    <li>Click <b>Create API key</b> and copy it.</li>
+  </ol>
+  <table>
+    <tr><th>Nama (name)</th><td>e.g. <code>Google Gemma</code></td></tr>
+    <tr><th>Model</th><td><code>gemma-4-31b-it</code></td></tr>
+    <tr><th>Alamat API (API address)</th>
+      <td><code>https://generativelanguage.googleapis.com/v1beta/openai</code></td></tr>
+  </table>
+  <div class="note">
+    <p style="margin:0">Google's Gemma models <b>do not accept a system
+      instruction</b>, and Amadeus keeps her whole personality in one. The
+      add-on handles it: for this provider the persona is folded into your first
+      message instead. If you add a Gemma provider yourself in the advanced
+      config, switch on <code>system_in_user</code>.</p>
+  </div>
+
+  <h2>Option 3 — OpenRouter</h2>
   <ol>
     <li>Go to <a href="https://openrouter.ai" target="_blank">openrouter.ai</a>
       and click <b>Sign in</b>. Google or GitHub both work.</li>
