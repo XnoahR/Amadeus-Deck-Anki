@@ -882,11 +882,13 @@ def register():
 
     def setup():
         cfg = chatconf.load()
-        act = QAction("%s: buka chat" % chatconf.who(cfg)[0], mw)
+        from . import settings
+
+        act = QAction("Buka chat", mw)
         keys = str(cfg.get("chat_shortcut") or "").strip()
         if keys:
             act.setShortcut(QKeySequence(keys))
         act.triggered.connect(lambda _=False: toggle())
-        mw.form.menuTools.addAction(act)
+        settings.tools_menu().addAction(act)
 
     gui_hooks.main_window_did_init.append(setup)

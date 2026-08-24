@@ -598,6 +598,23 @@ def open_dialog():
     return True                        # Anki reads False as "not handled"
 
 
+_submenu = None
+
+
+def tools_menu():
+    """The add-on's one entry in Tools, created by whichever module asks first.
+
+    Two top-level items both beginning with "Amadeus" read as two add-ons -- and
+    did, to the person using it. Everything the add-on offers hangs off one
+    name, the way the larger add-ons here do it.
+    """
+    global _submenu
+
+    if _submenu is None:
+        _submenu = mw.form.menuTools.addMenu("Amadeus Deck")
+    return _submenu
+
+
 def register():
     from aqt import gui_hooks
     from aqt.qt import QAction
@@ -612,8 +629,8 @@ def register():
     gui_hooks.addon_config_editor_will_update_json.append(on_update_json)
 
     def setup():
-        act = QAction("Amadeus Deck: pengaturan…", mw)
+        act = QAction("Pengaturan…", mw)
         act.triggered.connect(lambda _=False: open_dialog())
-        mw.form.menuTools.addAction(act)
+        tools_menu().addAction(act)
 
     gui_hooks.main_window_did_init.append(setup)
