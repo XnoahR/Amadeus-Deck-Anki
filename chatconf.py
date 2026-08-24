@@ -82,6 +82,7 @@ KIND_DEFAULTS: dict[str, dict[str, str]] = {
 DEFAULTS: dict[str, Any] = {
     "character_name": "Amadeus",
     "user_name": "",
+    "grain_opacity": 0.30,
     "chat_enabled": True,
     "chat_shortcut": "Ctrl+Shift+M",
     "chat_width": 420,

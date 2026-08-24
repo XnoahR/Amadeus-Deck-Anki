@@ -378,7 +378,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
     // tembus pandang menumpuk apa adanya, jadi jalan di gelap maupun terang.
     for(var i=0;i<id.data.length;i+=4){
       var v=(Math.random()*255)|0;
-      id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=70;   // butiran tembus pandang
+      id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=120;
     }
     cx.putImageData(id,0,0);
     document.getElementById("amd-grain").style.backgroundImage=
@@ -463,10 +463,11 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
        "zoom": max(100, min(int(cfg.get("chat_thumb_zoom") or 240), 800)),
        "thumby": max(0, min(int(cfg.get("chat_thumb_y") or 20), 100)),
        "thumbmood": "true" if cfg.get("chat_thumb_expression", True) else "false",
-       # Measured, not guessed: at this opacity the grain reads about the
-       # same on a near-black ground and on paper, which is why there is one
-       # number here instead of a light and a dark one.
-       "grain": "0.22",
+       # Measured, not guessed. Random alpha reads the same on a near-black
+       # ground and on paper, so there is one number here rather than a light
+       # and a dark one -- and the number is what it is because 0.22 measured
+       # as present-but-unnoticeable on the panel it actually ships on.
+       "grain": "%.2f" % max(0.0, min(float(cfg.get("grain_opacity") or 0.30), 1.0)),
        "grainon": "true" if cfg.get("effects", True) else "false"}
 
 

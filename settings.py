@@ -47,7 +47,7 @@ GROUPS: list[tuple[str, list[str]]] = [
      ["show_in_reviewer", "reviewer_size", "reviewer_corner",
       "reviewer_always_visible", "reviewer_hide_seconds"]),
     ("ANIMASI & SUARA",
-     ["effects", "chatter_seconds", "typewriter", "typewriter_speed",
+     ["effects", "grain_opacity", "chatter_seconds", "typewriter", "typewriter_speed",
       "dialog_mouth", "dialog_mouth_ms", "dialog_caret", "dialog_caret_char",
       "dialog_sound", "dialog_volume", "dialog_pitch", "dialog_every"]),
     ("AI / CHAT",
@@ -136,6 +136,8 @@ TABS: list[tuple[str, list[tuple]]] = [
     ]),
     ("Animasi & suara", [
         ("effects", "Efek glitch dan noise", "bool"),
+        ("grain_opacity", "Kekuatan butiran di panel chat (0 = mati)",
+         "float", 0.0, 1.0, 0.05),
         ("typewriter", "Kalimat diketik huruf per huruf", "bool"),
         ("typewriter_speed", "Kecepatan ketik (ms per huruf, kecil = cepat)",
          "int", 5, 200),
