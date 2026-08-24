@@ -186,7 +186,7 @@ merepotkan.
 bukan deskripsi; model menuruti yang pertama dan mengabaikan yang kedua.
 
 **`providers`** — daftar model. Lebih enak diurus lewat formnya
-(**Tools → Amadeus Deck: pengaturan… → Chat / AI**): di sana ada dropdown untuk
+(**Tools → Amadeus Deck → Pengaturan… → Chat / AI**): di sana ada dropdown untuk
 memilih yang mana, tombol **+ Tambah** dan **Hapus**, dan kolom API key yang
 tersembunyi. Field yang tidak ditampilkan form — seperti `system_in_user` atau
 `api_key_env` — tetap utuh waktu kamu menyimpan dari sana. Tiap entri: `name`, `kind` (`openai` untuk semua

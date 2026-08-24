@@ -81,7 +81,7 @@ def _require_key(provider: dict[str, Any], api_key: str) -> None:
         return  # local servers accept any key
     raise ProviderError(
         f'Belum ada API key untuk "{provider["name"]}".\n\n'
-        "Buka Tools → Amadeus Deck: pengaturan… → Chat / AI, lalu isi kolom "
+        "Buka Tools → Amadeus Deck → Pengaturan… → Chat / AI, lalu isi kolom "
         "API key. Tombol di situ juga membuka panduan cara mendapatkannya."
     )
 
