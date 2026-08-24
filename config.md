@@ -11,8 +11,9 @@ rusak gara-gara koma yang kelewat.
 Halaman ini untuk sisanya: kalimat yang dia ucapkan, ekspresi mana untuk state
 mana, provider lebih dari satu, dan angka-angka yang jarang disentuh.
 
-Baris `=====  NAMA  =====` cuma penanda kelompok. Boleh diabaikan, jangan
-dihapus kalau tidak perlu.
+Baris `=====  NAMA  =====` cuma penanda kelompok, dan cuma ada di layar ini —
+dia tidak ikut tersimpan, jadi tidak perlu kamu jaga. Mau dihapus, digeser, atau
+dibiarkan, hasilnya sama.
 
 ---
 

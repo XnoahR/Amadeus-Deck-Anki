@@ -1,11 +1,9 @@
 {
-  "=========  TAMPILAN  =========": "",
   "theme": "vhs",
   "theme_deck_list": true,
   "theme_bars": true,
   "hide_bottom_bar": false,
   "daily_target": 100,
-  "=========  PANEL DI LAYAR DECK  =========": "",
   "show_on_deck_list": true,
   "panel_width": 250,
   "panel_height": 430,
@@ -16,13 +14,11 @@
   "history_days": 14,
   "show_note": true,
   "right_width": 230,
-  "=========  SAAT REVIEW  =========": "",
   "show_in_reviewer": true,
   "reviewer_size": 190,
   "reviewer_corner": "bottom-right",
   "reviewer_always_visible": true,
   "reviewer_hide_seconds": 5,
-  "=========  ANIMASI & SUARA  =========": "",
   "effects": true,
   "chatter_seconds": 40,
   "typewriter": true,
@@ -35,7 +31,6 @@
   "dialog_volume": 0.16,
   "dialog_pitch": 440,
   "dialog_every": 3,
-  "=========  AI / CHAT  =========": "",
   "chat_enabled": true,
   "chat_shortcut": "Ctrl+Shift+M",
   "chat_width": 420,
@@ -49,7 +44,6 @@
   "max_history_turns": 10,
   "max_tokens": 1200,
   "timeout_seconds": 90,
-  "=========  KALIMAT & EKSPRESI  =========": "",
   "lines": {
     "reminder": [
       "Kamu belum review hari ini. {due} kartu menumpuk.",
@@ -247,6 +241,5 @@
       "sided_worried"
     ]
   },
-  "=========  LAIN-LAIN  =========": "",
   "check_updates": true
 }

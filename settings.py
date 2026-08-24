@@ -14,6 +14,7 @@ everything else.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from aqt import mw
@@ -25,6 +26,95 @@ from aqt.qt import (
 from aqt.utils import showInfo, tooltip
 
 PACKAGE = __name__.split(".")[0]
+
+# Anki re-serialises an add-on's config with sort_keys=True before showing it,
+# so anything stored to mark a section just sorts to the top away from what it
+# was marking. The headings are therefore not stored at all: they are inserted
+# into the text on its way to the editor and taken out again on its way back,
+# which also keeps them out of anyone's saved config.
+MARK = "====="
+
+GROUPS: list[tuple[str, list[str]]] = [
+    ("TAMPILAN", ["theme", "theme_deck_list", "theme_bars", "hide_bottom_bar",
+                  "daily_target"]),
+    ("PANEL DI LAYAR DECK",
+     ["show_on_deck_list", "panel_width", "panel_height", "deck_scroll",
+      "deck_max_height", "show_stats", "show_history", "history_days",
+      "show_note", "right_width"]),
+    ("SAAT REVIEW",
+     ["show_in_reviewer", "reviewer_size", "reviewer_corner",
+      "reviewer_always_visible", "reviewer_hide_seconds"]),
+    ("ANIMASI & SUARA",
+     ["effects", "chatter_seconds", "typewriter", "typewriter_speed",
+      "dialog_mouth", "dialog_mouth_ms", "dialog_caret", "dialog_caret_char",
+      "dialog_sound", "dialog_volume", "dialog_pitch", "dialog_every"]),
+    ("AI / CHAT",
+     ["chat_enabled", "chat_shortcut", "chat_width", "chat_face_height",
+      "active_provider", "providers", "persona", "send_study_context",
+      "send_card_context", "max_context_chars", "max_history_turns",
+      "max_tokens", "timeout_seconds"]),
+    ("KALIMAT & EKSPRESI",
+     ["lines", "moods", "reviewer_lines", "reviewer_moods", "chat_moods"]),
+    ("LAIN-LAIN", ["check_updates"]),
+]
+
+# Enough of our own keys to be sure the text on screen is ours. The display hook
+# is handed the JSON without being told whose it is, and reshaping somebody
+# else's config would be a genuinely nasty thing to do.
+FINGERPRINT = ("reviewer_moods", "chat_moods", "dialog_mouth", "reviewer_corner",
+               "chatter_seconds")
+
+
+def _grouped(data):
+    out = {}
+    placed = set()
+    for title, keys in GROUPS:
+        present = [k for k in keys if k in data]
+        if not present:
+            continue
+        out["%s  %s  %s" % (MARK, title, MARK)] = ""
+        for k in present:
+            out[k] = data[k]
+            placed.add(k)
+    rest = [k for k in data if k not in placed and not k.startswith(MARK)]
+    if rest:
+        out["%s  LAINNYA  %s" % (MARK, MARK)] = ""
+        for k in rest:
+            out[k] = data[k]
+    return json.dumps(out, ensure_ascii=False, indent=4, separators=(",", ": "))
+
+
+def on_display_json(text):
+    """Group the raw editor's contents. Ours only, and never at the cost of
+    showing something that will not parse: any trouble and the text is returned
+    exactly as it arrived."""
+    try:
+        data = json.loads(text)
+    except Exception:
+        return text
+    if not isinstance(data, dict):
+        return text
+    if sum(1 for k in FINGERPRINT if k in data) < 4:
+        return text
+    try:
+        return _grouped(data)
+    except Exception:
+        return text
+
+
+def on_update_json(text, addon):
+    """Take the headings back out, so they never reach anyone's saved config."""
+    if addon != PACKAGE:
+        return text
+    try:
+        data = json.loads(text)
+    except Exception:
+        return text          # let Anki report the syntax error itself
+    if not isinstance(data, dict):
+        return text
+    kept = {k: v for k, v in data.items() if not k.startswith(MARK)}
+    return json.dumps(kept, ensure_ascii=False, indent=4)
+
 
 # (key, label, kind, *args). Order here is the order on screen.
 TABS: list[tuple[str, list[tuple]]] = [
@@ -311,6 +401,8 @@ def register():
         mw.addonManager.setConfigAction(PACKAGE, open_dialog)
     except Exception:
         pass
+    gui_hooks.addon_config_editor_will_display_json.append(on_display_json)
+    gui_hooks.addon_config_editor_will_update_json.append(on_update_json)
 
     def setup():
         act = QAction("Amadeus: pengaturan…", mw)
