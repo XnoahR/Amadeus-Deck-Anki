@@ -421,12 +421,12 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
       var m=document.getElementById("amd-meter");
       var bar=m.querySelector("i"), num=m.querySelector("b");
       var pct=d.window?Math.min(100,d.total/d.window*100):0;
-      bar.style.width=pct+"%";
+      bar.style.width=pct+"%%";
       m.classList.toggle("warm",pct>=60&&pct<85);
       m.classList.toggle("hot",pct>=85);
       num.textContent=d.window
         ? d.total.toLocaleString("id")+" / "+d.window.toLocaleString("id")
-          +"  ("+(pct<0.1?"<0,1":pct.toFixed(1).replace(".",","))+"%)"
+          +"  ("+(pct<0.1?"<0,1":pct.toFixed(1).replace(".",","))+"%%)"
         : "~"+d.total.toLocaleString("id")+" token";
       m.title=d.detail||"";
     },
