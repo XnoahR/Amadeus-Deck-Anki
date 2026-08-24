@@ -554,15 +554,11 @@ def open_guide():
     if not os.path.exists(GUIDE):
         showInfo("Panduannya tidak ketemu di:\n%s" % GUIDE)
         return
-    url = QUrl.fromLocalFile(GUIDE)
-    # The path never changes, so a browser that has opened this once will keep
-    # serving its cached copy -- and an updated guide looks like an add-on that
-    # did not update. Stamping the file's mtime makes each version its own URL.
-    try:
-        url.setQuery("v=%d" % int(os.path.getmtime(GUIDE)))
-    except OSError:
-        pass
-    QDesktopServices.openUrl(url)
+    # No query string on the URL. A file:// handler is free to read the whole
+    # thing as a filename, and "apikey.html?v=123" is not a file that exists --
+    # which opens nothing at all, silently. Staleness is dealt with in the page
+    # itself instead.
+    QDesktopServices.openUrl(QUrl.fromLocalFile(GUIDE))
 
 
 _raw_holder = None
