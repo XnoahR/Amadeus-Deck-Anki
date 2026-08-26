@@ -98,6 +98,18 @@ DEFAULTS: dict[str, Any] = {
     "providers": [],
     "max_tokens": 1200,
     "timeout_seconds": 90,
+    # Dipakai panel chat, jadi harus lolos saringan di load(): kunci yang tidak
+    # terdaftar di sini dibuang diam-diam, dan halaman tidak pernah melihatnya.
+    "voice_clips": False,
+    "voice_clips_volume": 0.9,
+    "live2d": False,
+    "live2d_lipsync": True,
+    "live2d_mouth_gain": 1.6,
+    "live2d_head_tilt": True,
+    "live2d_fade_ms": 260,
+    "live2d_zoom": 1.12,
+    "live2d_offset_y": 0.0,
+    "live2d_idle_ms": 5000,
     "max_history_turns": 10,
     "about_you": "",
     "remember_chat": True,

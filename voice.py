@@ -159,6 +159,9 @@ function amdVoice(o, hooks){
   var AC = null, wave = null, tick = null;
   var full = "", node = null, n = 0, streaming = false;
   var body = null, caret = null, blinker = null;
+  // Set for a line that has a real recording: the blips step aside so the
+  // two are never heard on top of each other.
+  var hushed = false;
 
   // A 25% duty pulse, built from its Fourier series. Web Audio only ships a
   // 50% square, which is the fat tone; the NES's thin one is this.
@@ -176,6 +179,7 @@ function amdVoice(o, hooks){
   }
 
   function blip(ch){
+    if (hushed) return;
     if (!o.sound || !o.vol) return;
     try {
       if (!ctx()) return;
@@ -211,11 +215,18 @@ function amdVoice(o, hooks){
     if (typeof hooks[name] === "function") { try { hooks[name](); } catch (e) {} }
   }
 
+  // Mulutnya bergerak ketika huruf sedang muncul -- bukan ketika barisnya
+  // sekadar terbuka. Balasan yang dialirkan membuka barisnya lebih dulu lalu
+  // menunggu model menjawab; kalau mulut ikut menyala di situ, dia terlihat
+  // mengunyah beberapa detik tanpa mengatakan apa-apa.
+  var speaking = false;
+
+  function hush(){ if (speaking){ speaking = false; fire("stop"); } }
+
   function stop(){
-    var was = !!tick;
     if (tick) { clearInterval(tick); tick = null; }
     unmount();
-    if (was) fire("stop");
+    hush();
   }
 
   // A text node plus a caret element, rather than writing textContent, because
@@ -242,7 +253,14 @@ function amdVoice(o, hooks){
   // reply grows it while the cursor is still walking, which is why the typing
   // rhythm survives a model that arrives in bursts.
   function step(){
-    if (n >= full.length) { if (!streaming) stop(); return; }
+    if (n >= full.length) {
+      // Sudah menyusul semua yang ada. Kalau masih mengalir, ini jeda antar
+      // potongan: mulut beristirahat, barisnya tetap terbuka.
+      hush();
+      if (!streaming) stop();
+      return;
+    }
+    if (!speaking) { speaking = true; fire("start"); }
     var ch = full.charAt(n++);
     body.nodeValue = full.slice(0, n);
     var every = o.every || 3;
@@ -257,13 +275,16 @@ function amdVoice(o, hooks){
     node = el; n = 0;
     mount(el);
     tick = setInterval(step, o.speed);
-    fire("start");
   }
 
   return {
     say: function(el, text){
       stop();
       node = el; full = (text == null) ? "" : String(text); streaming = false;
+      // Asked before the typing starts, so the voice and the letters begin
+      // together. A false answer -- no clip, or the browser refused to start
+      // audio -- leaves the blips doing their usual job.
+      hushed = (typeof hooks.clip === "function") ? !!hooks.clip(full) : false;
       if (!o.on || !full) { el.textContent = full; return; }
       begin(el);
     },
@@ -271,7 +292,7 @@ function amdVoice(o, hooks){
     // close it when the model stops. The caret keeps blinking through the gaps,
     // which is the honest signal that more is coming.
     open: function(el){
-      full = ""; streaming = true;
+      full = ""; streaming = true; hushed = false;
       if (!o.on) { el.textContent = ""; node = el; return; }
       begin(el);
     },
@@ -283,6 +304,9 @@ function amdVoice(o, hooks){
       streaming = false;
       if (!tick && node) { node.textContent = full; unmount(); }
     },
+    // Dipakai ketika sebuah rekaman mengambil alih giliran bicara: bunyi
+    // 8-bit berhenti untuk baris itu, lalu hidup lagi di baris berikutnya.
+    hush: function(on){ hushed = !!on; },
     text: function(){ return full; },
     // Clicking mid-line finishes it, the way every visual novel does, instead of
     // throwing the sentence away for a new one nobody asked for. Mid-stream it

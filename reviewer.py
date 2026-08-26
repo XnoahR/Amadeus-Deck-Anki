@@ -8,9 +8,10 @@ disturb your cards. Remove the add-on and your notes are exactly as they were.
 """
 
 import json
+import os
 import random
 
-from . import grain, voice, warp
+from . import clips, grain, voice, warp
 from . import theme as theme_mod
 
 from aqt import gui_hooks, mw
@@ -85,6 +86,14 @@ def _payload(addon, pics):
         "rot": theme_mod.rotations(theme_mod.name_of(c)),
         "grain": grain.settings(c),
         "warp": warp.settings(c),
+        # Nama keadaan di sini ("good", "wrong") bukan nama perasaan, jadi
+        # dipetakan dulu sebelum dipakai memilih klip.
+        "clips": clips.react_urls(addon, os.path.dirname(__file__)),
+        "clipmap": {"good": "happy", "easy": "happy", "hard": "thinking",
+                    "wrong": "annoyed", "annoyed": "annoyed",
+                    "pissed": "annoyed", "poke": "annoyed", "idle": "normal"},
+        "clipvol": float(c.get("voice_clips_volume", 0.9)),
+        "clipon": bool(c.get("voice_clips", True)),
         "effects": bool(c.get("effects", True)),
         "hidden": _chat_open(),
         "voice": voice.settings(c),
@@ -223,8 +232,30 @@ __WARP__
     else { host.style.opacity = "0"; }
   }
 
+  // Satu klip pendek per reaksi, dipilih acak tanpa mengulang yang barusan.
+  var lastClip = {}, sfx = null;
+  function voiceFor(mood){
+    if (!D.clipon || !D.clips) return false;
+    var key = (D.clipmap && D.clipmap[mood]) || mood;
+    var pool = D.clips[key];
+    if (!pool || !pool.length) return false;
+    var pick = pool[(Math.random() * pool.length) | 0];
+    if (pool.length > 1 && pick === lastClip[key])
+      pick = pool[(pool.indexOf(pick) + 1) % pool.length];
+    lastClip[key] = pick;
+    try {
+      if (sfx) sfx.pause();
+      sfx = new Audio(pick);
+      sfx.volume = D.clipvol == null ? 0.9 : D.clipvol;
+      var p = sfx.play();
+      if (p && p.catch) p.catch(function(){});
+    } catch (e) { return false; }
+    return true;
+  }
+
   window.amdReact = function(mood, quiet){
     MOUTH.set(mood);
+    if (!quiet && voiceFor(mood)) V.hush(true);
     var pool = D.lines[mood];
     var text = pool ? pick(pool) : "";
     say.style.display = text ? "block" : "none";

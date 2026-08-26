@@ -79,9 +79,9 @@ decknya ikut bertema dan bisa di-scroll, bukan memanjang ke bawah.
 jawabanmu. Tekan Again tiga kali beruntun dia mulai kesal; lima kali dia
 menyuruhmu istirahat.
 
-**Dua tema** — `vhs` (magenta/cyan, garis tracking pita video) dan `holo`
-(hologram cyan/magenta dengan potongan meleset). Dua-duanya punya scanline dan
-noise yang bisa dimatikan.
+**Delapan tema** — `vhs`, `holo`, `amber`, `divergence`, `paper` (satu-satunya
+yang terang), `slate`, `sakura`, `mint`. Scanline dan noise bisa dimatikan.
+Dialog pengaturannya ikut bertema.
 
 ---
 
@@ -91,11 +91,99 @@ kata — bunyinya dibangkitkan sendiri, tidak ada berkas audio yang diunduh.
 Klik di tengah kalimat untuk langsung menyelesaikannya. Matikan lewat
 `typewriter` dan `dialog_sound` di config.
 
+**Ekspresi bisa digambar, bukan ditukar.** Dengan `frame_scan` menyala, frame
+dikosongkan sampai tinggal garis rasternya sebentar, lalu ekspresi barunya
+dibangun turun di belakang kepala pindai — empat pita terlihat, karena sapuan
+yang halus terbaca seperti pudar sedangkan yang kasar terbaca seperti mesin
+menggambar garis. `tracking` melengkapinya: sesekali satu pita mendatar tergeser
+ke samping dan menyala, seperti pita kaset yang kepalanya meleset.
+
+Keduanya tidak menyentuh mulut dan kedip. Keduanya berganti gambar tiap 90–110
+md, lebih cepat dari sapuan mana pun, jadi hanya **pergantian ekspresi** yang
+menyapu — dan hanya kalau gambarnya memang berbeda.
+
+Semua yang ditulis di bawah ini **mati secara bawaan**. Pemasangan baru
+berperilaku persis seperti sebelum semua ini ada; kamu menyalakan yang kamu mau.
+
+---
+
+## Pilihan: suaranya sendiri, dan model Live2D
+
+Dua tambahan yang perlu berkas **yang kamu taruh sendiri**, dan keduanya mati
+sampai kamu menyalakannya. Kalau foldernya kosong, menyalakannya tidak mengubah
+apa pun: bunyi 8-bit dan gambar PNG tetap dipakai.
+
+### Rekaman suara
+
+Taruh audio di `user_files/voice/` dan dia bicara, bukan berbunyi bip.
+
+Ada dua jenis. **Klip kalimat** dinamai menurut kalimatnya sendiri — sepuluh
+karakter pertama SHA-1 dari teks persis di `lines`. Ubah kalimat itu di config
+dan tautannya putus sendiri: yang terjadi cuma tidak ada suara untuk kalimat
+itu, bukan kalimat yang salah dengan suaranya. **Klip reaksi** didaftar di
+`react.json` menurut suasana, karena reaksi menjawab *apa yang dia rasakan*,
+bukan *apa yang dia katakan* — "sekali lagi" yang sama cocok untuk setiap
+jawaban salah.
+
+```
+user_files/voice/
+  b44dd8123f.ogg      satu kalimat, dicari lewat teksnya
+  react_9f2c1a04bb.ogg
+  react.json          {"annoyed": [{"file": "react_9f2c1a04bb.ogg"}], ...}
+```
+
+`ogg`, `mp3`, `wav`, dan `m4a` semuanya bisa. Ketika sebuah klip berbunyi, bunyi
+8-bit mundur untuk kalimat itu — matikan lewat `voice_clips_hush` kalau mau
+dua-duanya.
+
+Panel review menamai keadaannya menurut **apa yang terjadi pada kartu**
+(`good`, `wrong`), sementara panel chat menamai wajahnya menurut **apa yang dia
+rasakan** (`happy`, `annoyed`). Add-on menerjemahkan keduanya, jadi kartu yang
+dijawab sampai ke permukaan mana pun yang sedang menampilkannya dengan wajah dan
+klip yang benar-benar ada.
+
+### Model Live2D di panel chat
+
+Taruh model Cubism beserta runtime-nya di `user_files/live2d/`:
+
+```
+user_files/live2d/
+  lib/live2d.min.js  lib/pixi.min.js  lib/cubism2.min.js
+  sesuatu.model.json + apa pun yang dirujuknya
+```
+
+Tidak ada yang ikut dipaketkan. Runtime Cubism milik Live2D Inc. dan modelnya
+milik siapa pun yang menggambarnya — persis seperti gambar karakter.
+
+Ekspresinya dibangun dari parameter, jadi tidak terbatas pada gambar yang kamu
+punya: bukaan mata, arah pandang, tinggi alis, dan mulut. Mulutnya mengikuti
+**suara** selama sebuah klip berbunyi — dibaca dari audionya sendiri, bukan
+dihitung dari huruf — dan mengikuti ketikan di luar itu. Satu gerak kepala
+pendek ikut tiap suasana, ditumpangkan di atas gerak diam bawaan model alih-alih
+menggantikannya, dan ekspresinya mengendur kembali ke wajah tenang setelah
+beberapa detik.
+
+Kanvasnya baru ditampilkan setelah satu bingkai benar-benar tergambar. WebGL
+mati, berkas runtime kurang, model gagal dibaca — semuanya berakhir dengan wajah
+PNG masih di tempatnya.
+
 ## Pengaturan
 
-Semua ada di **Tools → Add-ons → Amadeus Deck → Config**. Seluruh dialognya juga
-di situ, jadi kamu bisa menulis ulang setiap kalimat dengan suara karaktermu
-sendiri tanpa menyentuh kode:
+**Tools → Amadeus Deck → Pengaturan** berupa formulir, dikelompokkan dalam tab
+dan bagian, dan bertema mengikuti sisanya. Semua yang kemungkinan besar ingin
+kamu ubah ada di situ, termasuk daftar penyedia AI dengan tombol *tes koneksi*
+yang mengirim satu permintaan kecil lalu menampilkan jawabannya apa adanya.
+
+Formulirnya berupa halaman, bukan tumpukan widget, dengan alasan yang spesifik:
+begitu stylesheet Qt menyentuh `QCheckBox::indicator`, Qt membuang penggambar
+bawaan platform dan tanda centangnya hilang kecuali semua keadaannya digambar
+sendiri. Saklar geser tidak punya masalah itu. Kalau halamannya gagal dibangun
+karena apa pun, dialog widget lama yang terbuka — pengaturan harus tetap bisa
+dijangkau apa pun yang sedang rusak.
+
+**Tools → Add-ons → Amadeus Deck → Config** tetap editor JSON mentah milik Anki,
+dan tetap tempat seluruh dialognya, jadi kamu bisa menulis ulang setiap kalimat
+dengan suara karaktermu sendiri tanpa menyentuh kode:
 
 ```json
 "lines": {
@@ -174,8 +262,20 @@ tampilan ini.
 - **Efeknya beranimasi terus-menerus.** Di laptop itu sedikit memakan baterai.
   Set `effects: false` untuk mematikannya, dan kalau sistemmu menyalakan
   "reduce motion" efeknya berhenti sendiri.
+- **Live2D butuh WebGL di webview Anki.** Di kebanyakan mesin ada, tapi sistem
+  yang jatuh ke render perangkat lunak bisa saja tidak. Kalau begitu kanvasnya
+  tidak pernah ditampilkan dan wajah PNG tetap dipakai — tidak ada yang perlu
+  disetel, tidak ada yang rusak.
+- **Suara tidak akan mulai sebelum halamannya diklik sekali.** Peramban menolak
+  memutar audio tanpa sentuhan, jadi kalimat pertama setelah panel dibuka bisa
+  bisu.
+- **Hanya desktop.** AnkiMobile dan AnkiDroid tidak menjalankan add-on Python,
+  jadi tidak ada satu pun dari ini yang muncul di sana. Koleksimu tetap sinkron
+  seperti biasa.
 
 ## Lisensi
 
-MIT untuk kodenya. Art karakter yang kamu tambahkan mengikuti lisensi art itu
-sendiri.
+MIT untuk kodenya. Apa pun yang kamu tambahkan membawa lisensinya sendiri: art
+karakter, rekaman suara, model Live2D, dan runtime Cubism yang dibutuhkan model
+itu. Tidak ada satu pun yang ikut dipaketkan, dan folder yang dicarinya dimulai
+dalam keadaan kosong.

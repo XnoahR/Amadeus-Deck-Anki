@@ -27,7 +27,7 @@ from aqt.qt import (
 from aqt.utils import showWarning, tooltip
 from aqt.webview import AnkiWebView
 
-from . import cardctx, chatconf, grain, providers, voice, warp
+from . import cardctx, chatconf, clips, grain, live2d, providers, voice, warp
 from . import theme as theme_mod
 
 DOCK_NAME = "amadeusChatDock"
@@ -365,6 +365,10 @@ def _page(cfg, pics, theme):
     moods = json.dumps(vocab)
     vconf = json.dumps(voice.settings(cfg))
     wconf = json.dumps(warp.settings(cfg))
+    here = os.path.dirname(__file__)
+    l2d = dict(live2d.settings(cfg), **live2d.state(chatconf.PACKAGE, here))
+    l2d["vol"] = float(cfg.get("voice_clips_volume", 0.9))
+    react = clips.react_urls(chatconf.PACKAGE, here)
     her, _you = chatconf.who(cfg)
     return """
 <style>
@@ -419,6 +423,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 %(voicejs)s
 %(grainjs)s
 %(warpjs)s
+%(l2djs)s
 (function(){
   var PICS=%(face)s, MOODS=%(moods)s, NAME=%(name)s, THUMBMOOD=%(thumbmood)s;
   var log=document.getElementById("amd-log"), img=document.getElementById("amd-img");
@@ -443,7 +448,43 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
     (how==="mood"?WARP.swap:WARP.set)(src);
   },framesFor,VC.mouthMs,BLINK);
   MOUTH.blink();
-  var V=amdVoice(VC, VC.mouth?MOUTH:{}), live=null, liveThumb=null;
+  // Kait mulut dipakai berdua: gambar PNG memakai frame, model Live2D memakai
+  // parameter. Keduanya menerima tanda yang sama dari amdVoice.
+  var HOOK={
+    start:function(){ if(MOUTHON) MOUTH.start(); if(window.__L2D) __L2D.talk(true); },
+    stop: function(){ if(MOUTHON) MOUTH.stop();  if(window.__L2D) __L2D.talk(false); }
+  };
+  var MOUTHON=!!VC.mouth;
+  var V=amdVoice(VC, HOOK), live=null, liveThumb=null;
+
+  // Model Live2D menumpang di atas wajah PNG. Kalau tidak ada -- tidak
+  // dipasang penggunanya, WebGL mati, model gagal dibaca -- gambarnya tetap
+  // yang terlihat dan semua di bawah ini diam-diam tidak berbuat apa-apa.
+  var L2DCFG=%(l2dcfg)s, REACT=%(react)s, ALIAS=%(alias)s;
+  var L2D=amdLive2D(document.getElementById("amd-face"), L2DCFG,
+                    %(faces)s, %(tilt)s, %(gest)s);
+  window.__L2D=L2D;
+  // Satu jalur saja: amdLive2D yang memutuskan mana yang menang antara
+  // rekaman dan ketikan. Sebelumnya keputusan itu ada di sini dan memakai
+  // V.text(), yang tidak pernah kosong lagi setelah kalimat pertama -- jadi
+  // mulutnya membuka-tutup selamanya.
+  var SPEAK=amdSpeak(L2DCFG, function(level){ L2D.voiced(level); });
+
+  // Satu klip per suasana, dipilih acak tapi tidak mengulang yang barusan.
+  var lastClip={};
+  function react(mood){
+    var pool=REACT[mood]; if(!pool||!pool.length) return false;
+    var pick=pool[(Math.random()*pool.length)|0];
+    if(pool.length>1&&pick===lastClip[mood]){
+      pick=pool[(pool.indexOf(pick)+1)%%pool.length];
+    }
+    lastClip[mood]=pick;
+    var ok=SPEAK.play(pick);
+    // Suaranya sungguhan sedang bicara, jadi bunyi 8-bit mundur untuk baris
+    // ini. Baris berikutnya mulai dari nol lagi lewat V.say/V.open.
+    if(ok) V.hush(true);
+    return ok;
+  }
 
   function bottom(){log.scrollTop=log.scrollHeight}
 
@@ -467,7 +508,12 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 
   window.amdChat={
     mood:function(m){
+      // Jaring pengaman: kalau nama dari luar bukan salah satu wajah yang
+      // dikenal, jatuh ke padanan terdekat, bukan ke wajah kosong.
+      m=ALIAS[m]||m;
       MOUTH.set(m);
+      L2D.mood(m);
+      react(m);
       // The face tag arrives after the line has already opened, so the row's
       // own thumbnail is corrected the moment we learn it.
       if(liveThumb&&THUMBMOOD){var f=framesFor(m);
@@ -475,6 +521,9 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
     },
     me:function(t){mine(t)},
     open:function(){var r=hers("normal");live=r.body;liveThumb=r.thumb;V.open(live)},
+    // Dipanggil begitu permintaan dikirim, sebelum balasannya ada: jeda
+    // menunggu model jadi terisi, bukan kosong.
+    waiting:function(){ L2D.mood("thinking"); react("thinking"); },
     push:function(t){if(live){V.push(t);bottom()}},
     close:function(){V.close();live=null;liveThumb=null;bottom()},
     said:function(t,mood){var r=hers(mood||"normal");V.say(r.body,t);bottom()},
@@ -502,7 +551,16 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   document.getElementById("amd-face").addEventListener("click",function(){
     V.wake(); pycmd("amd_chat_poke");
   });
-  window.amdChat.mood("normal");
+  // Peramban menolak memulai suara sebelum halaman disentuh. Yang perlu
+  // dibangunkan cuma AudioContext-nya -- memutar berkas kosong justru
+  // melempar galat dan menghabiskan kesempatan sekali pakai ini.
+  document.addEventListener("click",function once(){
+    SPEAK.wake();
+    document.removeEventListener("click",once);
+  });
+  // Wajah awal dipasang langsung, tanpa lewat mood(): kalau lewat sana ia
+  // ikut memutar klip reaksi tiap kali panel dibuka.
+  MOUTH.set("normal"); L2D.mood("normal");
 })();
 </script>
 """ % {"ground": ground, "ink": ink, "edge": edge, "face": face, "card": card,
@@ -514,7 +572,11 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
        "thumbmood": "true" if cfg.get("chat_thumb_expression", True) else "false",
        "grain": json.dumps(grain.settings(cfg)),
        "grainjs": grain.JS,
-       "warp": wconf, "warpjs": warp.JS}
+       "warp": wconf, "warpjs": warp.JS,
+       "l2djs": live2d.JS, "l2dcfg": json.dumps(l2d),
+       "faces": json.dumps(live2d.FACES), "tilt": json.dumps(live2d.TILT),
+       "react": json.dumps(react), "gest": json.dumps(live2d.GESTURES),
+       "alias": json.dumps(FROM_REVIEWER)}
 
 
 def measure(cfg, turns, summary=""):
@@ -652,7 +714,9 @@ class ChatDock(QDockWidget):
 
     def _on_js(self, message):
         if message == "amd_chat_poke":
-            self._say("mood", "happy")
+            # Dicolek itu mengganggunya. "happy" di sini salah sejak awal --
+            # kolam kalimat `poke` pun seluruhnya berupa teguran.
+            self._say("mood", "annoyed")
         return False
 
     def _compact(self, cfg):
@@ -778,6 +842,9 @@ class ChatDock(QDockWidget):
         self._mood = "normal"
         self.send_btn.setText("Stop")
         self._say("status", "%s sedang berpikir…" % her)
+        # Wajah dan suara "sedang berpikir" dipasang sebelum permintaannya
+        # berangkat, jadi jeda menunggu model terisi alih-alih kosong.
+        self._say("waiting")
         self._say("open")
         reply: list[str] = []
 
@@ -890,6 +957,23 @@ class ChatDock(QDockWidget):
         QDockWidget.closeEvent(self, event)
 
 
+# The reviewer names its states after what happened to the card; the chat
+# panel names its faces after how she feels. They are different vocabularies,
+# and nothing translated between them -- so an answered card sent "good" or
+# "wrong" into a panel that has no such face and no such clip, and the result
+# was silence with a blank expression.
+FROM_REVIEWER = {
+    "good": "happy", "easy": "happy", "hard": "thinking",
+    "wrong": "annoyed", "annoyed": "annoyed", "pissed": "annoyed",
+    "poke": "annoyed", "idle": "normal",
+}
+
+
+def as_chat_mood(mood):
+    name = str(mood or "normal")
+    return FROM_REVIEWER.get(name, name)
+
+
 def react(mood, line):
     """Her reaction to an answered card, when the chat panel is the surface
     showing her. Two of her on screen at once -- a floating overlay and a panel
@@ -899,6 +983,7 @@ def react(mood, line):
     """
     if _dock is None or not _dock.isVisible():
         return False
+    mood = as_chat_mood(mood)
     _dock._say("mood", mood)
     if line:
         _dock._say("said", line, mood)

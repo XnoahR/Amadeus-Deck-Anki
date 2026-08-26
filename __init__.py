@@ -14,7 +14,7 @@ import re
 
 from aqt import gui_hooks, mw
 
-from . import chat, grain, settings, updates, voice, warp
+from . import chat, clips, grain, settings, updates, voice, warp
 from . import theme as theme_mod
 from aqt.deckbrowser import DeckBrowserContent
 
@@ -28,7 +28,17 @@ CHARDIR = os.path.join(HERE, "character")
 # document portal, which exports exactly one file into a temporary directory --
 # so the guide's images are simply not there and can never load.
 mw.addonManager.setWebExports(
-    __name__, r"(character/.*\.(png|jpg|jpeg|webp|gif)|guide/.*\.(html|png|css|js))")
+    __name__,
+    # `..` ditolak lebih dulu untuk seluruh pola. Tanpa ini `.*` ikut
+    # mencocokkan `user_files/live2d/../../meta.json` -- dan meta.json itu
+    # tempat kunci API pengguna disimpan.
+    r"(?!.*\.\.)"
+    r"(character/.*\.(png|jpg|jpeg|webp|gif)"
+    r"|guide/.*\.(html|png|css|js)"
+    r"|user_files/voice/.*\.(ogg|mp3|wav|m4a)"
+    # Model Live2D milik penggunanya sendiri: runtime, definisi, tekstur,
+    # dan motionnya semua diambil oleh peramban lewat jalur ini.
+    r"|user_files/live2d/.*\.(js|json|moc|mtn|png|jpg|jpeg|exp3|motion3))")
 
 MOODS = [
     "normal", "happy", "winking", "sided_pleasant", "sided_thinking",
@@ -391,6 +401,9 @@ def build_html():
                  for m, v in pics.items()},
         "moodFor": MOODS_(),
         "lines": {k: [_safe_fmt(t, s) for t in v] for k, v in LINES_().items()},
+        "clips": clips.urls(ADDON, os.path.dirname(__file__), LINES_(),
+                            lambda t: _safe_fmt(t, s)),
+        "clipconf": clips.settings(c),
         "chatter": int(c.get("chatter_seconds") or 40),
         "voice": voice.settings(c),
         "grain": grain.settings(c),
@@ -510,6 +523,7 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;margin:0;
 /*__AMD_VOICE__*/
 /*__AMD_GRAIN__*/
 /*__AMD_WARP__*/
+/*__AMD_CLIPS__*/
 (function(){{
   // Anki emits the deck table bare; a table cannot scroll on its own without
   // losing its column widths, so wrap it and scroll the wrapper instead.
@@ -574,7 +588,12 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;margin:0;
   }},framesFor,V0.mouthMs,BLINK);
   MOUTH.blink();
   amdGrain(panel.querySelector(".amd-noise"),D.grain);
-  var VOICE=amdVoice(D.voice||{{}},(D.voice&&D.voice.mouth)?MOUTH:{{}});
+  var CLIPS=amdClips(D.clips||{{}},D.clipconf||{{}});
+  // Mouth hooks and the clip hook reach amdVoice through one object; it looks
+  // hooks up by name, so an extra key is simply another thing it can ask for.
+  var HOOK=(D.voice&&D.voice.mouth)?MOUTH:{{}};
+  HOOK.clip=CLIPS.play;
+  var VOICE=amdVoice(D.voice||{{}},HOOK);
   function show(mood){{
     MOUTH.set(mood);
     var pool=(D.lines&&D.lines[mood])||[];
@@ -668,7 +687,8 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;margin:0;
                           stamp="&#9673; %d/%d" % (s["done"], s["target"]))
             .replace("/*__AMD_VOICE__*/", voice.JS)
             .replace("/*__AMD_GRAIN__*/", grain.JS)
-            .replace("/*__AMD_WARP__*/", warp.JS))
+            .replace("/*__AMD_WARP__*/", warp.JS)
+            .replace("/*__AMD_CLIPS__*/", clips.JS))
 
 
 _pending_css = ""

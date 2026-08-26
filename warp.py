@@ -21,11 +21,11 @@ permanently mid-draw. Only a change of expression sweeps.
 """
 
 DEFAULTS = {
-    "frame_scan": True,
+    "frame_scan": False,
     "frame_scan_ms": 320,
     "frame_scan_steps": 4,
     "frame_scan_line": 2,
-    "tracking": True,
+    "tracking": False,
     "tracking_strength": 7,
 }
 

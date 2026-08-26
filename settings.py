@@ -53,7 +53,11 @@ GROUPS: list[tuple[str, list[str]]] = [
       "chatter_seconds", "typewriter", "typewriter_speed",
       "dialog_mouth", "dialog_mouth_ms", "blink", "blink_min_ms",
       "blink_max_ms", "blink_hold_ms", "dialog_caret", "dialog_caret_char",
-      "dialog_sound", "dialog_volume", "dialog_pitch", "dialog_every"]),
+      "dialog_sound", "dialog_volume", "dialog_pitch", "dialog_every",
+      "voice_clips", "voice_clips_volume", "voice_clips_hush",
+      "live2d", "live2d_lipsync", "live2d_mouth_gain", "live2d_head_tilt",
+      "live2d_fade_ms", "live2d_zoom", "live2d_offset_y",
+      "live2d_idle_ms"]),
     ("AI / CHAT",
      ["character_name", "user_name", "chat_enabled", "chat_shortcut", "chat_width", "chat_face_height", "chat_thumb_expression", "chat_thumb_zoom", "chat_thumb_y",
       "active_provider", "providers", "persona", "about_you",
@@ -63,6 +67,11 @@ GROUPS: list[tuple[str, list[str]]] = [
       "max_tokens", "timeout_seconds"]),
     ("KALIMAT & EKSPRESI",
      ["lines", "moods", "reviewer_lines", "reviewer_moods", "chat_moods"]),
+    ("SUARA & LIVE2D",
+     ["voice_clips", "voice_clips_volume", "voice_clips_hush",
+      "live2d", "live2d_zoom", "live2d_offset_y", "live2d_lipsync",
+      "live2d_mouth_gain", "live2d_head_tilt", "live2d_fade_ms",
+      "live2d_idle_ms"]),
     ("LAIN-LAIN", ["check_updates"]),
 ]
 
@@ -127,39 +136,81 @@ def on_update_json(text, addon):
 # (key, label, kind, *args). Order here is the order on screen.
 TABS: list[tuple[str, list[tuple]]] = [
     ("Tampilan", [
+        ("", "TEMA", "head"),
         ("theme", "Tema", "choice", None),
         ("daily_target", "Target kartu per hari", "int", 10, 5000),
         ("theme_deck_list", "Ikut mewarnai daftar deck", "bool"),
         ("theme_bars", "Ikut mewarnai bilah atas & bawah", "bool"),
+
+        ("", "PANEL DI LAYAR DECK", "head"),
         ("show_on_deck_list", "Tampilkan dia di layar deck", "bool"),
         ("panel_width", "Lebar panelnya (px)", "int", 120, 600),
         ("panel_height", "Tinggi panelnya (px)", "int", 200, 1200),
+
+        ("", "YANG DITAMPILKAN", "head"),
         ("show_stats", "Tampilkan statistik", "bool"),
         ("show_history", "Tampilkan grafik 14 hari", "bool"),
         ("show_note", "Tampilkan catatan harian", "bool"),
     ]),
-    ("Animasi & suara", [
+    ("Animasi", [
+        ("", "EFEK PANEL", "head"),
         ("effects", "Efek glitch dan noise", "bool"),
         ("grain_opacity", "Kekuatan butiran di panel chat (0 = mati)",
          "float", 0.0, 1.0, 0.05),
+
+        ("", "PERGANTIAN EKSPRESI", "head"),
         ("frame_scan", "Ekspresi digambar turun, bukan langsung ganti", "bool"),
         ("frame_scan_ms", "Lama sapuan (ms)", "int", 80, 2000),
         ("frame_scan_steps", "Kekasaran sapuan (langkah, kecil = makin patah-patah)",
          "int", 2, 40),
         ("frame_scan_line", "Tebal garis pindai (px, 0 = tanpa garis)", "int", 0, 12),
-        ("tracking", "Distorsi tracking: pita mendatar sesekali tergeser", "bool"),
+
+        ("", "DISTORSI", "head"),
+        ("tracking", "Pita mendatar sesekali tergeser, seperti kaset", "bool"),
         ("tracking_strength", "Kekuatan tracking (px)", "int", 1, 30),
+
+        ("", "KETIKAN", "head"),
         ("typewriter", "Kalimat diketik huruf per huruf", "bool"),
         ("typewriter_speed", "Kecepatan ketik (ms per huruf, kecil = cepat)",
          "int", 5, 200),
-        ("dialog_mouth", "Mulutnya bergerak saat bicara", "bool"),
-        ("blink", "Matanya berkedip sesekali", "bool"),
-        ("dialog_mouth_ms", "Kecepatan mulut (ms per frame)", "int", 40, 400),
         ("dialog_caret", "Kursor kedip di ujung teks", "bool"),
+        ("chatter_seconds", "Ganti kalimat sendiri tiap (detik)", "int", 5, 600),
+
+        ("", "WAJAH", "head"),
+        ("dialog_mouth", "Mulutnya bergerak saat bicara", "bool"),
+        ("dialog_mouth_ms", "Kecepatan mulut (ms per frame)", "int", 40, 400),
+        ("blink", "Matanya berkedip sesekali", "bool"),
+
+        ("", "BUNYI KETIK", "head"),
         ("dialog_sound", "Suara bicara 8-bit", "bool"),
         ("dialog_volume", "Volume suara (0 - 1)", "float", 0.0, 1.0, 0.02),
         ("dialog_pitch", "Nada suara (Hz, besar = lebih tinggi)", "int", 80, 2000),
-        ("chatter_seconds", "Ganti kalimat sendiri tiap (detik)", "int", 5, 600),
+    ]),
+    ("Suara & Live2D", [
+        ("", "REKAMAN SUARA", "head"),
+        ("", "Keduanya perlu berkas yang kamu taruh sendiri, dan keduanya mati "
+             "sampai kamu menyalakannya. Tanpa berkasnya, menyalakan saklar ini "
+             "tidak mengubah apa pun — bunyi 8-bit dan gambar PNG tetap dipakai.",
+         "note"),
+        ("voice_clips", "Pakai rekaman suara kalau ada (user_files/voice/)", "bool"),
+        ("voice_clips_volume", "Volume rekaman (0 - 1)", "float", 0.0, 1.0, 0.05),
+        ("voice_clips_hush",
+         "Matikan bunyi 8-bit untuk kalimat yang ada rekamannya", "bool"),
+
+        ("", "MODEL LIVE2D DI PANEL CHAT", "head"),
+        ("live2d", "Pakai model Live2D kalau ada (user_files/live2d/)", "bool"),
+        ("live2d_zoom", "Ukuran dia di panel (kecil = makin menjauh)",
+         "float", 0.4, 3.0, 0.05),
+        ("live2d_offset_y", "Geser tegak (negatif = naik)", "float", -1.0, 1.0, 0.02),
+
+        ("", "GERAK DAN MULUT", "head"),
+        ("live2d_lipsync", "Mulutnya ikut suara rekaman", "bool"),
+        ("live2d_mouth_gain", "Kepekaan mulut terhadap suara", "float", 0.2, 6.0, 0.1),
+        ("live2d_head_tilt", "Kepalanya bergerak sedikit tiap ekspresi", "bool"),
+        ("live2d_fade_ms", "Lama peralihan ekspresi (ms)", "int", 0, 1500),
+        ("live2d_idle_ms",
+         "Ekspresi mengendur kembali ke wajah diam setelah (ms, 0 = tidak)",
+         "int", 0, 60000),
     ]),
     ("Saat review", [
         ("show_in_reviewer", "Tampilkan dia saat review", "bool"),
@@ -172,8 +223,11 @@ TABS: list[tuple[str, list[tuple]]] = [
         ("reviewer_hide_seconds", "Kalimatnya hilang setelah (detik)", "int", 1, 60),
     ]),
     ("Chat / AI", [
+        ("", "SIAPA DIA", "head"),
         ("character_name", "Namanya", "text"),
         ("user_name", "Panggil kamu apa (kosong = nama profil Anki)", "text"),
+
+        ("", "PANEL CHAT", "head"),
         ("chat_enabled", "Aktifkan chat", "bool"),
         ("chat_shortcut", "Tombol pintas", "text"),
         ("chat_width", "Lebar panel chat (px)", "int", 280, 1200),
@@ -181,9 +235,13 @@ TABS: list[tuple[str, list[tuple]]] = [
         ("chat_thumb_expression",
          "Potret kecil ikut ekspresi tiap kalimat (mati = selalu wajah normal)",
          "bool"),
+
+        ("", "PENYEDIA AI", "head"),
         ("__provider__", "", "provider"),
         ("persona", "Siapa dia (persona) - {name} dan {user} akan diganti", "longtext"),
         ("about_you", "Yang perlu dia ingat tentang kamu", "longtext"),
+
+        ("", "INGATAN & KONTEKS", "head"),
         ("remember_chat", "Ingat percakapan setelah Anki ditutup", "bool"),
         ("compact_history",
          "Ringkas percakapan lama, jangan dibuang (butuh 1 permintaan tambahan)",
@@ -251,8 +309,35 @@ class Settings(QDialog):
         page = QWidget(self)
         form = QFormLayout(page)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        first = True
         for spec in fields:
             key, label, kind = spec[0], spec[1], spec[2]
+            if kind == "head":
+                # Satu tab dengan dua puluh baris rata adalah dinding. Judul
+                # memberi mata tempat berhenti, dan mengelompokkan saklar yang
+                # memang saling bergantung.
+                h = QLabel(label, self)
+                f = h.font()
+                f.setBold(True)
+                f.setPointSizeF(max(7.5, f.pointSizeF() * 0.88))
+                h.setFont(f)
+                h.setStyleSheet(
+                    "letter-spacing:1px;color:palette(mid);"
+                    "border-bottom:1px solid palette(mid);padding-bottom:3px;"
+                    + ("margin-top:0px" if first else "margin-top:16px"))
+                form.addRow(h)
+                first = False
+                continue
+            if kind == "note":
+                n = QLabel(label, self)
+                n.setWordWrap(True)
+                n.setStyleSheet("color:palette(mid);")
+                nf = n.font()
+                nf.setPointSizeF(max(7.0, nf.pointSizeF() * 0.9))
+                n.setFont(nf)
+                form.addRow(n)
+                continue
+            first = False
             if kind == "provider":
                 self._provider_rows(form)
                 continue
@@ -552,9 +637,9 @@ class Settings(QDialog):
             self.raw["active_provider"] = self.providers[self.p_index].get("name", "")
 
         mw.addonManager.writeConfig(PACKAGE, self.raw)
-        self._refresh()
-        tooltip("Pengaturan disimpan.", period=3000)
         self.accept()
+        mw.progress.single_shot(50, self._refresh, True)
+        tooltip("Pengaturan disimpan.", period=3000)
 
     def _refresh(self):
         try:
@@ -572,6 +657,48 @@ class Settings(QDialog):
     def _advanced(self):
         self.reject()
         open_raw()
+
+
+def test_provider(entry, report):
+    """Send one tiny request and hand the answer back verbatim.
+
+    "400 model is unavailable" seen from inside a chat panel says nothing about
+    which of the four fields is wrong, or whether the fault is the account
+    rather than the settings. `report` is called on the main thread with a
+    finished sentence -- both surfaces, the Qt form and the page, show the same
+    words.
+    """
+    from . import chatconf, providers
+
+    entry = chatconf.normalize_provider(dict(entry or {}))
+    try:
+        key = chatconf.resolve_api_key(entry)
+    except chatconf.KeyLookupError as exc:
+        report(str(exc))
+        return
+
+    got = []
+
+    def work():
+        providers.stream_completion(
+            entry, key, "Balas dengan satu kata: ok.",
+            [{"role": "user", "content": "ping"}],
+            max_tokens=16, timeout=30,
+            on_text=got.append, on_status=lambda _c: None,
+            should_stop=lambda: False)
+
+    def done(future):
+        try:
+            future.result()
+        except Exception as exc:      # noqa: BLE001 - shown verbatim
+            report("Gagal.\n\nModel: %s\nAlamat: %s\n\n%s"
+                   % (entry["model"], entry["base_url"], exc))
+            return
+        reply = "".join(got).strip()
+        report("Berhasil.\n\nModel: %s\nJawabannya: %s"
+               % (entry["model"], reply[:120] or "(kosong)"))
+
+    mw.taskman.run_in_background(work, done)
 
 
 GUIDE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -625,6 +752,23 @@ def open_raw():
 
 
 def open_dialog():
+    """The page form, with the widget form still behind it.
+
+    A page needs a working QWebEngine; the widget form needs nothing. If the
+    page cannot be built for any reason, the old dialog opens instead -- the
+    settings must always be reachable, whatever else is broken.
+    """
+    try:
+        from .settingsweb import WebSettings
+
+        WebSettings(mw).exec()
+        return True                    # Anki membaca False sebagai "tidak ditangani"
+    except Exception:
+        pass
+    _open_widget_dialog()
+
+
+def _open_widget_dialog():
     Settings(mw).exec()
     return True                        # Anki reads False as "not handled"
 
