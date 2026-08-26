@@ -14,7 +14,7 @@ import re
 
 from aqt import gui_hooks, mw
 
-from . import chat, grain, settings, updates, voice
+from . import chat, grain, settings, updates, voice, warp
 from . import theme as theme_mod
 from aqt.deckbrowser import DeckBrowserContent
 
@@ -394,6 +394,7 @@ def build_html():
         "chatter": int(c.get("chatter_seconds") or 40),
         "voice": voice.settings(c),
         "grain": grain.settings(c),
+        "warp": warp.settings(c),
     }), quote=True)
 
     css = """
@@ -508,6 +509,7 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;margin:0;
 <script>
 /*__AMD_VOICE__*/
 /*__AMD_GRAIN__*/
+/*__AMD_WARP__*/
 (function(){{
   // Anki emits the deck table bare; a table cannot scroll on its own without
   // losing its column widths, so wrap it and scroll the wrapper instead.
@@ -566,8 +568,9 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;margin:0;
   var BLINK={{on:V0.blink,min:V0.blinkMin,max:V0.blinkMax,hold:V0.blinkHold,
              closed:(D.pics&&D.pics.eyes_closed)||[],
              sided:(D.pics&&D.pics.sided_eyes_closed)||[]}};
-  var MOUTH=amdMouth(function(src){{
-    for(var i=0;i<imgs.length;i++)imgs[i].src=src;
+  var WARP=amdWarp(panel,imgs,D.warp||{{}});
+  var MOUTH=amdMouth(function(src,how){{
+    (how==="mood"?WARP.swap:WARP.set)(src);
   }},framesFor,V0.mouthMs,BLINK);
   MOUTH.blink();
   amdGrain(panel.querySelector(".amd-noise"),D.grain);
@@ -664,7 +667,8 @@ center>.amd-stage{{order:2;flex:0 1 auto;flex-basis:auto;margin:0;
                           line=_html.escape(pick_line(s["mood"], s)),
                           stamp="&#9673; %d/%d" % (s["done"], s["target"]))
             .replace("/*__AMD_VOICE__*/", voice.JS)
-            .replace("/*__AMD_GRAIN__*/", grain.JS))
+            .replace("/*__AMD_GRAIN__*/", grain.JS)
+            .replace("/*__AMD_WARP__*/", warp.JS))
 
 
 _pending_css = ""

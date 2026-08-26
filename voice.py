@@ -69,9 +69,12 @@ function amdMouth(apply, framesOf, ms, blink){
   var timer = null, frames = [], i = 0, dir = 1, mood = null;
   var blinker = null, holding = null, talking = false;
 
-  function rest(){
+  // `fresh` marks the one case worth drawing in: the expression itself
+  // changed. Mouth frames and blinks go up plainly -- they land every 90-110ms
+  // and any sweep is slower than that.
+  function rest(fresh){
     frames = framesOf(mood) || [];
-    if (frames.length) apply(frames[0]);
+    if (frames.length) apply(frames[0], fresh ? "mood" : "");
   }
 
   // Which closed-eye set matches the pose she is holding. The add-on already
@@ -117,7 +120,11 @@ function amdMouth(apply, framesOf, ms, blink){
 
   return {
     // Called whenever the expression changes, not only while she is speaking.
-    set: function(name){ mood = name; if (!timer) rest(); },
+    set: function(name){
+      if (name === mood) return;   // same face resolved again: nothing to draw
+      mood = name;
+      if (!timer) rest(true);
+    },
     start: function(){
       talking = true;
       frames = framesOf(mood) || [];

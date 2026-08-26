@@ -113,6 +113,18 @@ Notable options: `theme`, `daily_target`, `effects`, `panel_width`,
 `show_note`, `show_in_reviewer`, `reviewer_corner`, `reviewer_size`,
 `reviewer_always_visible`. Full descriptions are in the Config tab.
 
+The frame has two effects of its own, each with its own switch. `frame_scan`
+draws a new expression down the frame instead of cutting to it -- the picture is
+emptied to bare scan lines for a beat, then rebuilt behind a sweeping line.
+`frame_scan_steps` sets how coarse that is (4 by default: four visible bands,
+not a smooth fade), `frame_scan_ms` how long it takes, and `frame_scan_line` how
+thick the sweeping line is, or `0` for no line at all. `tracking` is the other:
+every so often one horizontal band slips sideways and brightens, the way a tape
+does when the head is off track, with `tracking_strength` in pixels.
+
+Neither touches the mouth or the blink. Those change picture every 90-110ms,
+faster than any sweep, so only a change of expression sweeps.
+
 ---
 
 ## Install

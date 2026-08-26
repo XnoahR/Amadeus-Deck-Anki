@@ -10,7 +10,7 @@ disturb your cards. Remove the add-on and your notes are exactly as they were.
 import json
 import random
 
-from . import grain, voice
+from . import grain, voice, warp
 from . import theme as theme_mod
 
 from aqt import gui_hooks, mw
@@ -84,6 +84,7 @@ def _payload(addon, pics):
         "pal": theme_mod.palette(theme_mod.name_of(c)),
         "rot": theme_mod.rotations(theme_mod.name_of(c)),
         "grain": grain.settings(c),
+        "warp": warp.settings(c),
         "effects": bool(c.get("effects", True)),
         "hidden": _chat_open(),
         "voice": voice.settings(c),
@@ -93,6 +94,7 @@ def _payload(addon, pics):
 SCRIPT = r"""
 __VOICE__
 __GRAIN__
+__WARP__
 (function(){
   if (window.__amdRev) return;
   var D = __PAYLOAD__;
@@ -207,8 +209,9 @@ __GRAIN__
   var V0 = D.voice || {};
   var BLINK = {on: V0.blink, min: V0.blinkMin, max: V0.blinkMax, hold: V0.blinkHold,
                closed: D.pics.eyes_closed || [], sided: D.pics.sided_eyes_closed || []};
-  var MOUTH = amdMouth(function(src){
-    for (var i = 0; i < imgs.length; i++) imgs[i].src = src;
+  var WARP = amdWarp(wrap, imgs, D.warp || {});
+  var MOUTH = amdMouth(function(src, how){
+    (how === "mood" ? WARP.swap : WARP.set)(src);
   }, framesFor, V0.mouthMs, BLINK);
   MOUTH.blink();
   var V = amdVoice(D.voice || {}, (D.voice && D.voice.mouth) ? MOUTH : {});
@@ -261,9 +264,12 @@ def on_webview_content(web_content, context):
     pics = pictures()
     if not pics:
         return
-    web_content.body += "<script>%s</script>" % SCRIPT.replace(
-        "__PAYLOAD__", _payload(package, pics)
-    ).replace("__VOICE__", voice.JS).replace("__GRAIN__", grain.JS)
+    script = (SCRIPT
+              .replace("__PAYLOAD__", _payload(package, pics))
+              .replace("__VOICE__", voice.JS)
+              .replace("__GRAIN__", grain.JS)
+              .replace("__WARP__", warp.JS))
+    web_content.body += "<script>%s</script>" % script
 
 
 def on_answer(reviewer, card, ease):

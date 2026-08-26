@@ -27,7 +27,7 @@ from aqt.qt import (
 from aqt.utils import showWarning, tooltip
 from aqt.webview import AnkiWebView
 
-from . import cardctx, chatconf, grain, providers, voice
+from . import cardctx, chatconf, grain, providers, voice, warp
 from . import theme as theme_mod
 
 DOCK_NAME = "amadeusChatDock"
@@ -364,6 +364,7 @@ def _page(cfg, pics, theme):
     vocab.update(cfg["chat_moods"])
     moods = json.dumps(vocab)
     vconf = json.dumps(voice.settings(cfg))
+    wconf = json.dumps(warp.settings(cfg))
     her, _you = chatconf.who(cfg)
     return """
 <style>
@@ -417,6 +418,7 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
 <script>
 %(voicejs)s
 %(grainjs)s
+%(warpjs)s
 (function(){
   var PICS=%(face)s, MOODS=%(moods)s, NAME=%(name)s, THUMBMOOD=%(thumbmood)s;
   var log=document.getElementById("amd-log"), img=document.getElementById("amd-img");
@@ -436,7 +438,10 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
   // landing on some other face is worse than not blinking at all.
   var BLINK={on:VC.blink,min:VC.blinkMin,max:VC.blinkMax,hold:VC.blinkHold,
              closed:PICS["eyes_closed"]||[],sided:PICS["sided_eyes_closed"]||[]};
-  var MOUTH=amdMouth(function(src){img.src=src},framesFor,VC.mouthMs,BLINK);
+  var WARP=amdWarp(document.getElementById("amd-face"),[img],%(warp)s);
+  var MOUTH=amdMouth(function(src,how){
+    (how==="mood"?WARP.swap:WARP.set)(src);
+  },framesFor,VC.mouthMs,BLINK);
   MOUTH.blink();
   var V=amdVoice(VC, VC.mouth?MOUTH:{}), live=null, liveThumb=null;
 
@@ -508,7 +513,8 @@ html,body{margin:0;padding:0;background:%(ground)s;color:%(ink)s;
        "thumby": max(0, min(int(cfg.get("chat_thumb_y") or 20), 100)),
        "thumbmood": "true" if cfg.get("chat_thumb_expression", True) else "false",
        "grain": json.dumps(grain.settings(cfg)),
-       "grainjs": grain.JS}
+       "grainjs": grain.JS,
+       "warp": wconf, "warpjs": warp.JS}
 
 
 def measure(cfg, turns, summary=""):
