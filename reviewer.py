@@ -73,6 +73,9 @@ def _chat_open():
 def _payload(addon, pics):
     c = _cfg()
     corner = c.get("reviewer_corner") or "bottom-right"
+    if corner not in ("bottom-right", "bottom-left", "top-right", "top-left",
+                      "middle-right", "middle-left"):
+        corner = "bottom-right"
     return json.dumps({
         "pics": {m: ["/_addons/%s/character/%s" % (addon, n) for n in v]
                  for m, v in pics.items()},
@@ -115,10 +118,16 @@ __WARP__
 
   var host = document.createElement("div");
   host.id = "amd-rev-host";
-  var corner = D.corner.split("-");
+  var corner = (D.corner || "bottom-right").split("-");
+  var pos = "position:fixed!important;z-index:2147483600!important;";
+  if (corner[0] === "middle") {
+    pos += "top:50%!important;transform:translateY(-50%)!important;" +
+           (corner[1] || "right") + ":14px!important;";
+  } else {
+    pos += corner[0] + ":14px!important;" + corner[1] + ":14px!important;";
+  }
   host.setAttribute("style",
-    "position:fixed!important;z-index:2147483600!important;" +
-    corner[0] + ":14px!important;" + corner[1] + ":14px!important;" +
+    pos +
     "width:" + D.size + "px!important;height:" + Math.round(D.size * 1.28) +
     "px!important;pointer-events:auto!important;opacity:0;" +
     "transition:opacity .18s linear;");

@@ -54,7 +54,7 @@ sided_worried, sided_surprised, indifferent
 
 - **show_in_reviewer** — tampilkan karakter saat mengerjakan kartu
 - **reviewer_size** — lebar potretnya, dalam pixel
-- **reviewer_corner** — `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`
+- **reviewer_corner** — `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`, `"middle-right"`, `"middle-left"`
 - **reviewer_always_visible** — `true` (bawaan): dia selalu kelihatan di pojok.
   `false`: hanya muncul sebentar tiap kali kamu menjawab, lalu menghilang.
 - **reviewer_hide_seconds** — berapa lama reaksinya bertahan sebelum kembali diam
